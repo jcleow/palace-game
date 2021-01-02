@@ -1,3 +1,4 @@
+import { response } from 'express';
 import sequelizePkg from 'sequelize';
 
 const { Op } = sequelizePkg;
@@ -49,7 +50,7 @@ const makeDeck = function () {
   // create the empty deck at the beginning
   const deck = [];
 
-  const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+  const suits = ['heart', 'diamond', 'club', 'spade'];
 
   let suitIndex = 0;
   while (suitIndex < suits.length) {
@@ -294,7 +295,14 @@ export default function games(db) {
   };
 
   const displayHand = async (req, res) => {
-
+    const playerHand = await db.GamesUser.findOne({
+      where: {
+        GameId: req.params.gameId,
+        UserId: req.params.playerId,
+      },
+    });
+    console.log(playerHand.cardsInHand, 'playerHand');
+    res.send(playerHand);
   };
 
   // return all functions we define in an object
@@ -305,8 +313,8 @@ export default function games(db) {
     create,
     index,
     show,
-    score,
     start,
     displayHand,
+    score,
   };
 }

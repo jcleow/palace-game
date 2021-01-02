@@ -1,3 +1,16 @@
+// Function that generates the path to each individual card
+const getCardPicUrl = (card) => {
+  let imgSrc = '';
+  // get directory for each of the cards
+  imgSrc = `/cardPictures/${card.suit.toUpperCase()}-${card.rank}`;
+  if (card.rank >= 11 && card.rank <= 13) {
+    imgSrc += `-${card.name.toUpperCase()}`;
+  }
+  imgSrc += '.png';
+  // Returns the link to the image
+  return imgSrc;
+};
+
 // Function that changes the colour of other buttons
 // back to green whenever a specific button is pressed
 /**
@@ -109,11 +122,17 @@ const startGame = function () {
       gameInterface.removeChild(startGameBtn);
 
       // Display each loggedIn player's cards
-      // return axios.get(`/games/${currentGame.id}/${Number(loggedInUserId)}`);
+      return axios.get(`/games/${currentGame.id}/${Number(loggedInUserId)}`);
     })
-    // .then((currPlayerCardsResponse) => {
-    //   console.log(currPlayerCardsResponse, 'currPlayerCards');
-    // })
+    .then((cardsInHandResponse) => {
+      const cardsInHand = JSON.parse(cardsInHandResponse.data.cardsInHand);
+      cardsInHand.forEach((card) => {
+        console.log(card, 'card');
+        const cardPic = document.createElement('img');
+        cardPic.src = getCardPicUrl(card);
+        document.body.appendChild(cardPic);
+      });
+    })
     .catch((error) => {
       // handle error
       console.log(error);
