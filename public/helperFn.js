@@ -128,10 +128,14 @@ const startGame = function () {
       const cardsInHand = JSON.parse(cardsInHandResponse.data.cardsInHand);
       // Player can only choose 3 cards to be placed on table-top
       let countOfSelectedCards = 0;
+      // Create a container to hold the pics
+      const cardPicContainer = document.createElement('div');
 
+      // Display a picture for each of the cards
       cardsInHand.forEach((card) => {
         const cardPic = document.createElement('img');
         cardPic.src = getCardPicUrl(card);
+        // Select & deselecting each card for the face up or down feature
         cardPic.addEventListener('click', () => {
           if (countOfSelectedCards < 3 || cardPic.style.border) {
             if (!cardPic.style.border) {
@@ -142,12 +146,23 @@ const startGame = function () {
               countOfSelectedCards -= 1;
             }
           } else {
+            // To output this message in a graphical form later
             console.log('You cannot choose more than 3 cards to faceup');
           }
-          console.log(countOfSelectedCards, 'countOfCards');
         });
-        document.body.appendChild(cardPic);
+        cardPicContainer.appendChild(cardPic);
       });
+      const faceDownBtn = document.createElement('button');
+      faceDownBtn.innerText = 'Face Down Selected Cards';
+      faceDownBtn.addEventListener('click', () => {
+      // Perform request to server to update faceDownCards
+        axios.put('/games/:gameId/:playerId');
+        // remove button and all the images
+        document.body.remove(cardPicContainer);
+        document.body.remove(faceDownBtn);
+      });
+      document.body.appendChild(cardPicContainer);
+      document.body.appendChild(faceDownBtn);
     })
     .catch((error) => {
       // handle error
