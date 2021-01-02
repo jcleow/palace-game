@@ -126,15 +126,25 @@ const startGame = function () {
     })
     .then((cardsInHandResponse) => {
       const cardsInHand = JSON.parse(cardsInHandResponse.data.cardsInHand);
+      // Player can only choose 3 cards to be placed on table-top
+      let countOfSelectedCards = 0;
+
       cardsInHand.forEach((card) => {
         const cardPic = document.createElement('img');
         cardPic.src = getCardPicUrl(card);
         cardPic.addEventListener('click', () => {
-          if (!cardPic.style.border) {
-            cardPic.style.border = 'thick solid #0000FF';
+          if (countOfSelectedCards < 3 || cardPic.style.border) {
+            if (!cardPic.style.border) {
+              cardPic.style.border = 'thick solid #0000FF';
+              countOfSelectedCards += 1;
+            } else {
+              cardPic.style.border = '';
+              countOfSelectedCards -= 1;
+            }
           } else {
-            cardPic.style.border = '';
+            console.log('You cannot choose more than 3 cards to faceup');
           }
+          console.log(countOfSelectedCards, 'countOfCards');
         });
         document.body.appendChild(cardPic);
       });
