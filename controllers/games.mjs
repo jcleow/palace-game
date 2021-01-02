@@ -64,13 +64,13 @@ const makeDeck = function () {
       let cardName = rankCounter;
 
       // 1, 11, 12 ,13
-      if (cardName == 1) {
+      if (cardName === 1) {
         cardName = 'ace';
-      } else if (cardName == 11) {
+      } else if (cardName === 11) {
         cardName = 'jack';
-      } else if (cardName == 12) {
+      } else if (cardName === 12) {
         cardName = 'queen';
-      } else if (cardName == 13) {
+      } else if (cardName === 13) {
         cardName = 'king';
       }
 
@@ -183,7 +183,7 @@ export default function games(db) {
       console.log(randomPlayerNumArray, 'randomPlayerNumArray');
       // Update each User's playerNum
       playerUserIdArray.forEach(async (playerUserId, index) => {
-        const rows = await db.GamesUser.update(
+        await db.GamesUser.update(
           { playerNum: randomPlayerNumArray[index] },
           {
             where:
@@ -195,7 +195,18 @@ export default function games(db) {
         );
       });
 
-      // Draw 6 cards into each of the player's pile
+      // Draw 3 face down cards into each of the player's faceDown col
+      const playerFaceDownCards = [[], []];
+      playerFaceDownCards.forEach(async (faceDownHand, index) => {
+        for (let i = 0; i < 3; i += 1) {
+          faceDownHand.push(game.drawPile.deck.pop());
+        }
+        playerUserIdArray[index].faceDownCards = JSON.stringify(faceDownHand);
+        playerUserIdArray[index].changed('faceDownCards', true);
+        await playerUserIdArray[index].save();
+      });
+
+      // Draw 6 cards into each of the player's currentHands
       const playerHands = [[], []];
       playerHands.forEach(async (hand, index) => {
         for (let i = 0; i < 6; i += 1) {
@@ -203,8 +214,15 @@ export default function games(db) {
         }
         playerUserIdArray[index].cardsInHand = JSON.stringify(hand);
         playerUserIdArray[index].changed('cardsInHand', true);
-        playerUserIdArray[index].save();
+        await playerUserIdArray[index].save();
       });
+
+      // Update the state of the drawPile after distributing the cards
+      game.drawPile = JSON.stringify(game.drawPile.deck);
+      game.changed('drawPile', true);
+      await game.save();
+
+      // Send the necessary AJAX response
       response.send({
         id: game.id,
         loggedInUserId: request.cookies.loggedInUserId,
@@ -301,7 +319,6 @@ export default function games(db) {
         UserId: req.params.playerId,
       },
     });
-    console.log(playerHand.cardsInHand, 'playerHand');
     res.send(playerHand);
   };
 

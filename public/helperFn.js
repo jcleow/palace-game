@@ -127,9 +127,15 @@ const startGame = function () {
     .then((cardsInHandResponse) => {
       const cardsInHand = JSON.parse(cardsInHandResponse.data.cardsInHand);
       cardsInHand.forEach((card) => {
-        console.log(card, 'card');
         const cardPic = document.createElement('img');
         cardPic.src = getCardPicUrl(card);
+        cardPic.addEventListener('click', () => {
+          if (!cardPic.style.border) {
+            cardPic.style.border = 'thick solid #0000FF';
+          } else {
+            cardPic.style.border = '';
+          }
+        });
         document.body.appendChild(cardPic);
       });
     })
