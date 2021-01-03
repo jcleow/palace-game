@@ -79,7 +79,6 @@ const outputCurrentGameScores = (ongoingGame) => {
 
   axios.get(`/games/${ongoingGame.id}/score`)
     .then((gameScoreResponse) => {
-      console.log(gameScoreResponse, 'gameScoreResponse');
       player1ScoreDiv.innerHTML = gameScoreResponse.data.player1Score.score;
       player2ScoreDiv.innerHTML = gameScoreResponse.data.player2Score.score;
     })
@@ -102,7 +101,7 @@ const dealCards = function (currentGame) {
         const displayGameOverMsg = document.querySelector('#game-over');
         displayGameOverMsg.innerText = `Game Over. Winner is P${currentGame.currRoundWinner}`;
       }
-      console.log(currentGame, 'currentGame');
+
       // display it to the user
       runGame(currentGame);
     })
@@ -134,12 +133,10 @@ const outputCardPics = (cardsInHandResponse) => {
         if (!cardPic.style.border) {
           cardPic.style.border = 'thick solid #0000FF';
           selectedCardsArray.push(card);
-          console.log(selectedCardsArray, 'selectedCardsArray');
         } else {
           cardPic.style.border = '';
           // Remove selected card from its position
           selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
-          console.log(selectedCardsArray, 'selectedCardsArray');
         }
       } else {
         // To output this message in a graphical form later
@@ -197,11 +194,8 @@ const startGame = function () {
 
 // Function that gets the existing state of the game from the table through AJAX
 const refreshGameInfo = () => {
-  console.log(currentGame, 'currentGame');
   axios.get(`/games/${currentGame.id}`)
     .then((playerHandResponse) => {
-      console.log(playerHandResponse, 'response from refresh');
-      const currPlayerHand = playerHandResponse.data;
       outputCardPics(playerHandResponse);
     })
     .catch((error) => {
