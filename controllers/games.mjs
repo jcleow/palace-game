@@ -127,8 +127,8 @@ export default function games(db) {
         GameId: game.id,
         UserId: Number(req.cookies.loggedInUserId),
       };
-      // set gamestate to start
-      game.gameState = 'start';
+      // set gamestate to 'waiting' for players
+      game.gameState = 'waiting';
       await game.save();
 
       await db.GamesUser.create(newGameRound);
@@ -151,13 +151,13 @@ export default function games(db) {
 
   // Officially begins the game and stops new players from enter
   // Deals 6 cards to each player
-  const start = async (req, res) => {
+  const setGame = async (req, res) => {
     // get the game by the ID passed in the request
     try {
       const game = await db.Game.findByPk(req.params.id);
 
-      // change game status to ongoing;
-      game.gameState = 'ongoing';
+      // change game status to setGame;
+      game.gameState = 'setGame';
       await game.save();
 
       // Get all the user ids
@@ -263,13 +263,13 @@ export default function games(db) {
     }, {
       attributes: ['faceUpCards'],
     });
-    if (currGame.gameState === 'start') {
+    if (currGame.gameState === 'waiting') {
     // Retrieve usernames of each gameround entry
       const currGameUserGameRoundsPromises = currGameRoundDetails.map((gameRound) => gameRound.getUser());
       const currGameUserGameRoundResults = await Promise.all(currGameUserGameRoundsPromises);
       const currGameRoundUsernames = currGameUserGameRoundResults.map((result) => result.username);
       res.send({ currGameRoundDetails, currGameRoundUsernames });
-    } else if (currGame.gameState === 'ongoing') {
+    } else if (currGame.gameState === 'setGame') {
       res.redirect(`/games/${req.params.gameId}/player/${req.loggedInUserId}`);
     }
   };
@@ -280,7 +280,7 @@ export default function games(db) {
     if (req.middlewareLoggedIn === true) {
       const allOngoingGamesArray = await db.Game.findAll({
         where: {
-          gameState: 'start',
+          gameState: 'waiting',
         },
       });
       if (allOngoingGamesArray) {
@@ -335,6 +335,23 @@ export default function games(db) {
     playerHand.faceUpCards = JSON.stringify(selectedCardsArray);
     playerHand.changed('faceUpCards', true);
     await playerHand.save();
+
+    // Perform check if all player's faceUpCards column have been completed
+    const allPlayerHandsArray = await db.GamesUser.findAll({
+      where: {
+        GameId: req.params.gameId,
+        faceUpCards: null,
+
+      },
+    });
+    console.log(allPlayerHandsArray, 'any cards inside?');
+    // If so change gameState to 'start'
+    if (allPlayerHandsArray.length === 0) {
+      const currGame = await playerHand.getGame();
+      currGame.gameState = 'begin';
+      await currGame.save();
+    }
+
     res.send('Update operation complete');
   };
 
@@ -380,7 +397,7 @@ export default function games(db) {
     create,
     index,
     show,
-    start,
+    setGame,
     displayHand,
     updateHand,
     updatePile,

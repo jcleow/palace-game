@@ -16,34 +16,6 @@ const getCardPicUrl = (card) => {
   return imgSrc;
 };
 
-// Function that changes the colour of other buttons
-// back to green whenever a specific button is pressed
-/**
- *
- * @param {integer} selectedFeatureButtonIndex
- *  References the current index of the feature button clicked on
- */
-function deselectOtherFeatures(selectedFeatureButtonIndex) {
-  const allFeatureButtons = document.querySelectorAll('.feature');
-  // As long as it is not the currently clicked 'features' button,
-  // all other features button must be green
-  allFeatureButtons.forEach((eachFeatureButton) => {
-    eachFeatureButton.style.backgroundColor = 'green';
-  });
-}
-/**
- *
- * @param {Object} parentDiv - Container of the errorMessageOutput Div
- * @param {String} errorMessage
- */
-function outputMissingFieldsMessage(parentDiv, errorMessage) {
-  const errorMessageOutput = document.createElement('div');
-  errorMessageOutput.innerHTML = errorMessage;
-  parentDiv.appendChild(errorMessageOutput);
-  const isFormValid = false;
-  return isFormValid;
-}
-
 const createUserIdAndLogOutBtnDisplay = (parentNode, response) => {
   // Create the userId display and logout btn
   const userIdLabel = document.createElement('label');
@@ -72,19 +44,6 @@ const createUserIdAndLogOutBtnDisplay = (parentNode, response) => {
   parentNode.appendChild(logoutBtn);
 };
 
-// To output the scores
-const outputCurrentGameScores = (ongoingGame) => {
-  const player1ScoreDiv = document.querySelector('#player1Score');
-  const player2ScoreDiv = document.querySelector('#player2Score');
-
-  axios.get(`/games/${ongoingGame.id}/score`)
-    .then((gameScoreResponse) => {
-      player1ScoreDiv.innerHTML = gameScoreResponse.data.player1Score.score;
-      player2ScoreDiv.innerHTML = gameScoreResponse.data.player2Score.score;
-    })
-    .catch((error) => { console.log(error); });
-};
-
 // make a request to the server
 // to change the deck. set 2 new cards into the player hand.
 const dealCards = function (currentGame) {
@@ -101,9 +60,6 @@ const dealCards = function (currentGame) {
         const displayGameOverMsg = document.querySelector('#game-over');
         displayGameOverMsg.innerText = `Game Over. Winner is P${currentGame.currRoundWinner}`;
       }
-
-      // display it to the user
-      runGame(currentGame);
     })
     .then(() => {
       // Update the display of the running score for both players
@@ -126,6 +82,7 @@ const outputCardPics = (cardsInHandResponse) => {
   cardsInHand.forEach((card) => {
     const cardPic = document.createElement('img');
     cardPic.src = getCardPicUrl(card);
+    cardPic.setAttribute('class', 'cardPic');
 
     // Select & deselecting each card for the face up or down feature
     cardPic.addEventListener('click', () => {
@@ -147,7 +104,7 @@ const outputCardPics = (cardsInHandResponse) => {
   });
 
   const faceDownBtn = document.createElement('button');
-  faceDownBtn.innerText = 'Face Down Selected Cards';
+  faceDownBtn.innerText = 'Place Selected Cards on Table';
 
   document.body.appendChild(cardPicContainer);
   document.body.appendChild(faceDownBtn);
@@ -170,8 +127,8 @@ const outputCardPics = (cardsInHandResponse) => {
   });
 };
 
-const startGame = function () {
-  axios.put(`/games/${currentGame.id}/start`)
+const setGame = function () {
+  axios.put(`/games/${currentGame.id}/setGame`)
     .then((response) => {
       currentGame = response.data;
       loggedInUserId = response.data.loggedInUserId;
@@ -208,7 +165,7 @@ const createStartBtn = () => {
   const startBtn = document.createElement('button');
   startBtn.innerText = 'Start';
   startBtn.setAttribute('id', 'startBtn');
-  startBtn.addEventListener('click', startGame);
+  startBtn.addEventListener('click', setGame);
   return startBtn;
 };
 

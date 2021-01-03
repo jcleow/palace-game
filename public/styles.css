@@ -1,34 +1,43 @@
-/** @format */
+/**
+ * /* * @format
+ * 
+ * .playerDisplay {
+ *   height: 50px;
+ *   width: 50px;
+ *   display: flex;
+ *   justify-content: center;
+ *   align-items: center;
+ *   background-color: lightblue;
+ * }
+ * 
+ * .playerScoreDisplay {
+ *   height: 50px;
+ *   width: 50px;
+ *   display: flex;
+ *   justify-content: center;
+ *   align-items: center;
+ * }
+ * 
+ * .playerDisplayContainer {
+ *   display: none;
+ * }
+ * 
+ * #player1Win,
+ * #player2Win {
+ *   width: 50px;
+ * }
+ * 
+ * .game-buttons {
+ *   display: flex;
+ *   flex-direction: column;
+ *   justify-content: center;
+ *   align-items: center;
+ * }
+ *
+ * @format
+ */
 
-.playerDisplay {
-  height: 50px;
-  width: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: lightblue;
-}
-
-.playerScoreDisplay {
-  height: 50px;
-  width: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.playerDisplayContainer {
-  display: none;
-}
-
-#player1Win,
-#player2Win {
-  width: 50px;
-}
-
-.game-buttons {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+.cardPic {
+  width: 200px;
+  height: auto;
 }

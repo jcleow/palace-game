@@ -73,7 +73,6 @@ axios.get('/games')
               if (existingRefreshBtn) {
                 gameInterface.removeChild(existingRefreshBtn);
               }
-              gameInterface.appendChild(createStartBtn());
               gameInterface.appendChild(createRefreshBtn());
               const headerDiv = document.querySelector('.headerDiv');
               currGameRoundUsernames.forEach((username) => {
