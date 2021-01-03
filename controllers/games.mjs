@@ -271,6 +271,8 @@ export default function games(db) {
       res.send({ currGameRoundDetails, currGameRoundUsernames });
     } else if (currGame.gameState === 'setGame') {
       res.redirect(`/games/${req.params.gameId}/player/${req.loggedInUserId}`);
+    } else if (currGame.gameState === 'begin') {
+      res.send({ currGameRoundDetails });
     }
   };
 
@@ -306,8 +308,6 @@ export default function games(db) {
         player_num: 2,
       },
     });
-    console.log(player2Score, 'player2Score');
-
     res.send({ player1Score, player2Score });
   };
 
@@ -350,9 +350,10 @@ export default function games(db) {
       const currGame = await playerHand.getGame();
       currGame.gameState = 'begin';
       await currGame.save();
+      res.send({ setGame: 'completed', message: 'Set Game Completed' });
+      return;
     }
-
-    res.send('Update operation complete');
+    res.send({ setGame: 'in-process', message: 'Update operation complete' });
   };
 
   // Update draw and discard pile

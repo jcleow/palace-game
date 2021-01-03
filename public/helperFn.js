@@ -71,7 +71,7 @@ const dealCards = function (currentGame) {
     });
 };
 
-const outputCardPics = (cardsInHandResponse) => {
+const outputCardPicsAndBtn = (cardsInHandResponse) => {
   const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
 
   // Create a container to hold the pics
@@ -117,9 +117,15 @@ const outputCardPics = (cardsInHandResponse) => {
     // Perform request to server to update faceDownCards
     axios.put(`/games/${currentGame.id}/player/${loggedInUserId}`, selectedCardsArray)
       .then((editResponse) => {
-        if (editResponse) {
-          console.log(editResponse);
+        console.log(editResponse);
+        // if all players have completed setting up their faceUpCards...
+        if (editResponse.data.setGame === 'completed') {
+          return axios.get(`/games/${currentGame.id}`);
         }
+      })
+      .then((currentGameResponse) => {
+        console.log(currentGameResponse, 'currentGameDataResponse');
+        // Render the pictures on the table
       })
       .catch((error) => {
         console.log(error);
@@ -141,7 +147,7 @@ const setGame = function () {
       return axios.get(`/games/${currentGame.id}/player/${Number(loggedInUserId)}`);
     })
     .then((cardsInHandResponse) => {
-      outputCardPics(cardsInHandResponse);
+      outputCardPicsAndBtn(cardsInHandResponse);
     })
     .catch((error) => {
       // handle error
@@ -153,7 +159,7 @@ const setGame = function () {
 const refreshGameInfo = () => {
   axios.get(`/games/${currentGame.id}`)
     .then((playerHandResponse) => {
-      outputCardPics(playerHandResponse);
+      outputCardPicsAndBtn(playerHandResponse);
     })
     .catch((error) => {
       console.log(error);
