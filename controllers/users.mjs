@@ -8,8 +8,6 @@ const { Op } = sequelizePkg;
 export default function users(db) {
   // To perform authentication of login when login button is pressed
   const login = async (req, res) => {
-    console.log(req.body, 'req-body');
-    console.log(req.body.username, 'username');
     try {
       const selectedUser = await db.User.findOne({
         where: {

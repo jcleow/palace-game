@@ -1,3 +1,8 @@
+// global value that holds info about the current hand.
+let currentGame = null;
+// global value for current loggedInUserId
+let loggedInUserId;
+
 // Function that generates the path to each individual card
 const getCardPicUrl = (card) => {
   let imgSrc = '';
@@ -68,11 +73,11 @@ const createUserIdAndLogOutBtnDisplay = (parentNode, response) => {
 };
 
 // To output the scores
-const outputCurrentGameScores = (currentGame) => {
+const outputCurrentGameScores = (ongoingGame) => {
   const player1ScoreDiv = document.querySelector('#player1Score');
   const player2ScoreDiv = document.querySelector('#player2Score');
 
-  axios.get(`/games/${currentGame.id}/score`)
+  axios.get(`/games/${ongoingGame.id}/score`)
     .then((gameScoreResponse) => {
       console.log(gameScoreResponse, 'gameScoreResponse');
       player1ScoreDiv.innerHTML = gameScoreResponse.data.player1Score.score;
@@ -83,7 +88,7 @@ const outputCurrentGameScores = (currentGame) => {
 
 // make a request to the server
 // to change the deck. set 2 new cards into the player hand.
-const dealCards = function () {
+const dealCards = function (currentGame) {
   axios.put(`/games/${currentGame.id}/deal`)
     .then((response) => {
       // get the updated hand value
@@ -115,35 +120,40 @@ const startGame = function () {
   axios.put(`/games/${currentGame.id}/start`)
     .then((response) => {
       currentGame = response.data;
-      const { loggedInUserId } = response.data;
+      loggedInUserId = response.data.loggedInUserId;
       // remove start game button
       const startGameBtn = document.querySelector('#startBtn');
       const gameInterface = document.querySelector('#game-interface');
       gameInterface.removeChild(startGameBtn);
 
       // Display each loggedIn player's cards
-      return axios.get(`/games/${currentGame.id}/${Number(loggedInUserId)}`);
+      return axios.get(`/games/${currentGame.id}/player/${Number(loggedInUserId)}`);
     })
     .then((cardsInHandResponse) => {
-      const cardsInHand = JSON.parse(cardsInHandResponse.data.cardsInHand);
-      // Player can only choose 3 cards to be placed on table-top
-      let countOfSelectedCards = 0;
+      console.log(cardsInHandResponse, 'cardRes');
+      const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
+
       // Create a container to hold the pics
       const cardPicContainer = document.createElement('div');
+      const selectedCardsArray = [];
 
       // Display a picture for each of the cards
       cardsInHand.forEach((card) => {
         const cardPic = document.createElement('img');
         cardPic.src = getCardPicUrl(card);
+
         // Select & deselecting each card for the face up or down feature
         cardPic.addEventListener('click', () => {
-          if (countOfSelectedCards < 3 || cardPic.style.border) {
+          if (selectedCardsArray.length < 3 || cardPic.style.border) {
             if (!cardPic.style.border) {
               cardPic.style.border = 'thick solid #0000FF';
-              countOfSelectedCards += 1;
+              selectedCardsArray.push(card);
+              console.log(selectedCardsArray, 'selectedCardsArray');
             } else {
               cardPic.style.border = '';
-              countOfSelectedCards -= 1;
+              // Remove selected card from its position
+              selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
+              console.log(selectedCardsArray, 'selectedCardsArray');
             }
           } else {
             // To output this message in a graphical form later
@@ -152,17 +162,29 @@ const startGame = function () {
         });
         cardPicContainer.appendChild(cardPic);
       });
+
       const faceDownBtn = document.createElement('button');
       faceDownBtn.innerText = 'Face Down Selected Cards';
-      faceDownBtn.addEventListener('click', () => {
-      // Perform request to server to update faceDownCards
-        axios.put('/games/:gameId/:playerId');
-        // remove button and all the images
-        document.body.remove(cardPicContainer);
-        document.body.remove(faceDownBtn);
-      });
+
       document.body.appendChild(cardPicContainer);
       document.body.appendChild(faceDownBtn);
+
+      faceDownBtn.addEventListener('click', () => {
+        // remove button and all the images
+        document.body.removeChild(cardPicContainer);
+        document.body.removeChild(faceDownBtn);
+
+        // Perform request to server to update faceDownCards
+        axios.put(`/games/${currentGame.id}/player/${loggedInUserId}`, selectedCardsArray)
+          .then((editResponse) => {
+            if (editResponse) {
+              console.log(editResponse);
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      });
     })
     .catch((error) => {
       // handle error
@@ -171,12 +193,13 @@ const startGame = function () {
 };
 
 // Function that gets the existing state of the game from the table through AJAX
-const refreshGameInfo = function () {
+const refreshGameInfo = () => {
+  console.log(currentGame, 'currentGame');
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
-      const currentGame = response.data;
-      console.log(currentGame, 'response');
-      runGame(currentGame);
+      console.log(response, 'response from refresh');
+      const currPlayerHand = response.data;
+      // runGame(currentGame);
     })
     .catch((error) => {
       console.log(error);

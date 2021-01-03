@@ -27,6 +27,7 @@ export default function routes(app) {
         res.status(503).send('sorry an error has occurred');
       }
       req.middlewareLoggedIn = true;
+      req.loggedInUserId = req.cookies.loggedInUserId;
       next();
       return;
     }
@@ -41,12 +42,15 @@ export default function routes(app) {
   // show if there are any existing games
   app.get('/games', GamesController.index);
   // get selected game
-  app.get('/games/:id', GamesController.show);
+  app.get('/games/:gameId', GamesController.show);
   // get selected game score
   app.get('/games/:id/score', GamesController.score);
 
   // get selected player's first 6 cards
-  app.get('/games/:gameId/:playerId', GamesController.displayHand);
+  app.get('/games/:gameId/player/:playerId', GamesController.displayHand);
+
+  // Update player's hand /facedown cards
+  app.put('/games/:gameId/player/:playerId', GamesController.updateHand);
 
   // create a new game
   app.post('/games', GamesController.create);
@@ -54,6 +58,10 @@ export default function routes(app) {
   app.put('/games/:id/start', GamesController.start);
   // update a game with new cards
   app.put('/games/:id/deal', GamesController.deal);
+
+  // To insert into GamesUsers table when another player joins the game
+  app.post('/games/:gameId/join/:playerId', GamesController.join);
+
   // // refresh page to get current status of game
   // app.get('/currentGameStatus/:id', GamesController.show);
 

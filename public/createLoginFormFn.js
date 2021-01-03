@@ -45,6 +45,7 @@ const createLoginForm = (loginContainer) => {
     axios.post('/user/login', { username, password })
       .then((response) => {
         console.log(response, 'response');
+        loggedInUserId = response.data.loggedInUserId;
         if (response.data.authenticated === true) {
           loginContainer.removeChild(loginFormDiv);
 

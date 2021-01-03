@@ -1,4 +1,3 @@
-import { response } from 'express';
 import sequelizePkg from 'sequelize';
 
 const { Op } = sequelizePkg;
@@ -112,7 +111,7 @@ export default function games(db) {
   };
 
   // create a new game. Insert a new row in the DB.
-  const create = async (request, response) => {
+  const create = async (req, res) => {
     // deal out a new shuffled deck for this game.
     const deck = shuffleCards(makeDeck());
 
@@ -126,7 +125,7 @@ export default function games(db) {
       const game = await db.Game.create(newGame);
       const newGameRound = {
         GameId: game.id,
-        UserId: Number(request.cookies.loggedInUserId),
+        UserId: Number(req.cookies.loggedInUserId),
       };
       // set gamestate to start
       game.gameState = 'start';
@@ -134,25 +133,28 @@ export default function games(db) {
 
       await db.GamesUser.create(newGameRound);
 
+      const currentPlayer = await db.User.findByPk(req.loggedInUserId);
+      console.log(currentPlayer, 'currentPlayer');
+
       // send the new game back to the user.
       // dont include the deck so the user can't cheat
-      response.send({
+      res.send({
         id: game.id,
+        currentPlayerName: currentPlayer.username,
         drawPile: game.drawPile,
         gameState: game.gameState,
       });
     } catch (error) {
-      response.status(500).send(error);
+      res.status(500).send(error);
     }
   };
 
   // Officially begins the game and stops new players from enter
   // Deals 6 cards to each player
-  const start = async (request, response) => {
+  const start = async (req, res) => {
     // get the game by the ID passed in the request
     try {
-      const game = await db.Game.findByPk(request.params.id);
-      console.log(game, 'game');
+      const game = await db.Game.findByPk(req.params.id);
 
       // change game status to ongoing;
       game.gameState = 'ongoing';
@@ -163,9 +165,8 @@ export default function games(db) {
         where: {
           GameId: game.id,
         },
-        attributes: ['id', 'UserId', 'cardsInHand'],
       });
-      console.log(playerUserIdArray, 'playerUserId');
+      console.log(playerUserIdArray, 'playerUserIdArray');
       // Randomly assign playerNum to each UserId in the game
       const randomPlayerNumArray = [];
       while (randomPlayerNumArray.length < playerUserIdArray.length) {
@@ -180,7 +181,6 @@ export default function games(db) {
           randomPlayerNumArray.push(generatedNum);
         }
       }
-      console.log(randomPlayerNumArray, 'randomPlayerNumArray');
       // Update each User's playerNum
       playerUserIdArray.forEach(async (playerUserId, index) => {
         await db.GamesUser.update(
@@ -223,9 +223,9 @@ export default function games(db) {
       await game.save();
 
       // Send the necessary AJAX response
-      response.send({
+      res.send({
         id: game.id,
-        loggedInUserId: request.cookies.loggedInUserId,
+        loggedInUserId: req.cookies.loggedInUserId,
       });
     } catch (error) {
       console.log(error);
@@ -251,41 +251,40 @@ export default function games(db) {
     }
   };
 
-  // For either user to refresh the game
-  const show = async (request, response) => {
-    const currentGame = await db.Game.findByPk(request.params.id);
-    if (currentGame.cards.playerHand) {
-      const P1Card = currentGame.cards.playerHand[0];
-      const P2Card = currentGame.cards.playerHand[1];
-      let currRoundWinner;
-      if (P1Card.rank > P2Card.rank) {
-        currRoundWinner = 1;
-      } else if (P2Card.rank > P1Card.rank) {
-        currRoundWinner = 2;
-      } else {
-        currRoundWinner = 'none';
-      }
-      currentGame.setDataValue('currRoundWinner', currRoundWinner);
+  // For either user to refresh the game... show the faceup cards (and the discard pile)
+  const show = async (req, res) => {
+    // First, check the state of the game...
+    const currGame = await db.Game.findByPk(req.params.gameId);
+
+    const currGameRoundDetails = await db.GamesUser.findAll({
+      where: {
+        GameId: req.params.gameId,
+      },
+    }, {
+      attributes: ['faceUpCards'],
+    });
+    if (currGame.gameState === 'start') {
+    // Retrieve usernames of each gameround entry
+      const currGameUserGameRoundsPromises = currGameRoundDetails.map((gameRound) => gameRound.getUser());
+      const currGameUserGameRoundResults = await Promise.all(currGameUserGameRoundsPromises);
+      const currGameRoundUsernames = currGameUserGameRoundResults.map((result) => result.username);
+      res.send({ currGameRoundDetails, currGameRoundUsernames });
+    } else if (currGame.gameState === 'ongoing') {
+      res.redirect(`/games/${req.params.gameId}/player/${req.loggedInUserId}`);
     }
-    response.send(currentGame);
   };
 
   // Index all on-going games
   const index = async (req, res) => {
+    const { loggedInUserId } = req;
     if (req.middlewareLoggedIn === true) {
       const allOngoingGamesArray = await db.Game.findAll({
         where: {
-          WinnerId: null,
-        },
-        include: {
-          model: db.GamesUser,
-          where: {
-            UserId: req.cookies.loggedInUserId,
-          },
+          gameState: 'start',
         },
       });
       if (allOngoingGamesArray) {
-        res.send(allOngoingGamesArray);
+        res.send({ allOngoingGamesArray, loggedInUserId });
         return;
       }
     }
@@ -319,7 +318,58 @@ export default function games(db) {
         UserId: req.params.playerId,
       },
     });
-    res.send(playerHand);
+    const currGame = await playerHand.get();
+
+    res.send({ playerHand, currGame });
+  };
+
+  // Perform update on user's facedown/faceup/currentHand/
+  const updateHand = async (req, res) => {
+    const selectedCardsArray = req.body;
+    const playerHand = await db.GamesUser.findOne({
+      where: {
+        GameId: req.params.gameId,
+        UserId: req.params.playerId,
+      },
+    });
+    playerHand.faceUpCards = JSON.stringify(selectedCardsArray);
+    playerHand.changed('faceUpCards', true);
+    await playerHand.save();
+    res.send('Update operation complete');
+  };
+
+  // Update draw and discard pile
+  const updatePile = () => {
+
+  };
+
+  const join = async (req, res) => {
+    // First, find if the user has joined this room before
+    const currentPlayerEntry = await db.GamesUser.findOne({
+      where: {
+        GameId: req.params.gameId,
+        UserId: req.params.playerId,
+      },
+    });
+
+    // Retrieve the currentGame instance to be sent back to browser
+    // cannot use associative method because upon the first joining, the non-creator
+    // player has not been created yet
+    const currentGame = await db.Game.findByPk(req.params.gameId);
+    console.log(currentGame, 'currentGame-23');
+
+    if (!currentPlayerEntry) {
+    // If user has never joined the game before create a new entry for player
+      await db.GamesUser.create(
+        {
+          GameId: req.params.gameId,
+          UserId: req.params.playerId,
+        },
+      );
+      res.send({ currentGame, message: 'new user has joined the game' });
+      return;
+    }
+    res.send({ currentGame, message: 'user has joined the game before' });
   };
 
   // return all functions we define in an object
@@ -332,6 +382,9 @@ export default function games(db) {
     show,
     start,
     displayHand,
+    updateHand,
+    updatePile,
     score,
+    join,
   };
 }
