@@ -116,6 +116,63 @@ const dealCards = function (currentGame) {
     });
 };
 
+const outputCardPics = (cardsInHandResponse) => {
+  const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
+
+  // Create a container to hold the pics
+  const cardPicContainer = document.createElement('div');
+  const selectedCardsArray = [];
+
+  // Display a picture for each of the cards
+  cardsInHand.forEach((card) => {
+    const cardPic = document.createElement('img');
+    cardPic.src = getCardPicUrl(card);
+
+    // Select & deselecting each card for the face up or down feature
+    cardPic.addEventListener('click', () => {
+      if (selectedCardsArray.length < 3 || cardPic.style.border) {
+        if (!cardPic.style.border) {
+          cardPic.style.border = 'thick solid #0000FF';
+          selectedCardsArray.push(card);
+          console.log(selectedCardsArray, 'selectedCardsArray');
+        } else {
+          cardPic.style.border = '';
+          // Remove selected card from its position
+          selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
+          console.log(selectedCardsArray, 'selectedCardsArray');
+        }
+      } else {
+        // To output this message in a graphical form later
+        console.log('You cannot choose more than 3 cards to faceup');
+      }
+    });
+    cardPicContainer.appendChild(cardPic);
+  });
+
+  const faceDownBtn = document.createElement('button');
+  faceDownBtn.innerText = 'Face Down Selected Cards';
+
+  document.body.appendChild(cardPicContainer);
+  document.body.appendChild(faceDownBtn);
+
+  faceDownBtn.addEventListener('click', () => {
+    // remove button and all the images
+    document.body.removeChild(cardPicContainer);
+    document.body.removeChild(faceDownBtn);
+
+    // Perform request to server to update faceDownCards
+    axios.put(`/games/${currentGame.id}/player/${loggedInUserId}`, selectedCardsArray)
+      .then((editResponse) => {
+        if (editResponse) {
+          console.log(editResponse);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  });
+};
+
 const startGame = function () {
   axios.put(`/games/${currentGame.id}/start`)
     .then((response) => {
@@ -130,61 +187,7 @@ const startGame = function () {
       return axios.get(`/games/${currentGame.id}/player/${Number(loggedInUserId)}`);
     })
     .then((cardsInHandResponse) => {
-      console.log(cardsInHandResponse, 'cardRes');
-      const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
-
-      // Create a container to hold the pics
-      const cardPicContainer = document.createElement('div');
-      const selectedCardsArray = [];
-
-      // Display a picture for each of the cards
-      cardsInHand.forEach((card) => {
-        const cardPic = document.createElement('img');
-        cardPic.src = getCardPicUrl(card);
-
-        // Select & deselecting each card for the face up or down feature
-        cardPic.addEventListener('click', () => {
-          if (selectedCardsArray.length < 3 || cardPic.style.border) {
-            if (!cardPic.style.border) {
-              cardPic.style.border = 'thick solid #0000FF';
-              selectedCardsArray.push(card);
-              console.log(selectedCardsArray, 'selectedCardsArray');
-            } else {
-              cardPic.style.border = '';
-              // Remove selected card from its position
-              selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
-              console.log(selectedCardsArray, 'selectedCardsArray');
-            }
-          } else {
-            // To output this message in a graphical form later
-            console.log('You cannot choose more than 3 cards to faceup');
-          }
-        });
-        cardPicContainer.appendChild(cardPic);
-      });
-
-      const faceDownBtn = document.createElement('button');
-      faceDownBtn.innerText = 'Face Down Selected Cards';
-
-      document.body.appendChild(cardPicContainer);
-      document.body.appendChild(faceDownBtn);
-
-      faceDownBtn.addEventListener('click', () => {
-        // remove button and all the images
-        document.body.removeChild(cardPicContainer);
-        document.body.removeChild(faceDownBtn);
-
-        // Perform request to server to update faceDownCards
-        axios.put(`/games/${currentGame.id}/player/${loggedInUserId}`, selectedCardsArray)
-          .then((editResponse) => {
-            if (editResponse) {
-              console.log(editResponse);
-            }
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-      });
+      outputCardPics(cardsInHandResponse);
     })
     .catch((error) => {
       // handle error
@@ -196,10 +199,10 @@ const startGame = function () {
 const refreshGameInfo = () => {
   console.log(currentGame, 'currentGame');
   axios.get(`/games/${currentGame.id}`)
-    .then((response) => {
-      console.log(response, 'response from refresh');
-      const currPlayerHand = response.data;
-      // runGame(currentGame);
+    .then((playerHandResponse) => {
+      console.log(playerHandResponse, 'response from refresh');
+      const currPlayerHand = playerHandResponse.data;
+      outputCardPics(playerHandResponse);
     })
     .catch((error) => {
       console.log(error);
