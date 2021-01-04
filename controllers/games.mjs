@@ -61,7 +61,7 @@ const makeDeck = function () {
     let rankCounter = 1;
     while (rankCounter <= 13) {
       let cardName = rankCounter;
-
+      let assignedRank = rankCounter;
       // 1, 11, 12 ,13
       if (cardName === 1) {
         cardName = 'ace';
@@ -73,11 +73,16 @@ const makeDeck = function () {
         cardName = 'king';
       }
 
+      // Since Ace is the largest value card, we reassign Ace.rank to 14
+      if (rankCounter === 1) {
+        assignedRank = 14;
+      }
+
       // make a single card object variable
       const card = {
         name: cardName,
         suit: currentSuit,
-        rank: rankCounter,
+        rank: assignedRank,
       };
 
       // add the card to the deck
