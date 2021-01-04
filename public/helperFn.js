@@ -3,6 +3,14 @@ let currentGame = null;
 // global value for current loggedInUserId
 let loggedInUserId;
 
+// Not useful at the moment
+// function deselectOtherCards() {
+//   const allCardImgArray = document.querySelectorAll('.card-pic');
+//   allCardImgArray.forEach((selectedCardImg) => {
+//     selectedCardImg.style.border = '';
+//   });
+// }
+
 // Function that generates the path to each individual card
 const getCardPicUrl = (card) => {
   let imgSrc = '';
@@ -79,7 +87,7 @@ const renderFaceDownCards = (selectedPlayerHandArray, selectedDivToAppendTo) => 
   });
 };
 
-const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo, selectedCardsArray) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
   JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard) => {
@@ -87,6 +95,10 @@ const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
     cardImg.src = getCardPicUrl(faceUpCard);
     cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
+
+    cardImg.addEventListener('click', () => {
+      selectCards(selectedCardsArray, cardImg, faceUpCard, 3);
+    });
   });
 };
 
@@ -123,6 +135,32 @@ const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) =
   }
 };
 
+/**
+ *
+ * @param {Array} selectedCardsArray
+ * An array that the parent function holds to keep
+ * track of the number of selected cards
+ * @param {DOMObject} cardImg
+ *
+ * @param {Object} card
+ *
+ * @param {Integer} limit
+ * Max number of cards that is to be selected at
+ * anyone time
+ *
+ */
+const selectCards = (selectedCardsArray, cardImg, card, limit) => {
+  if (selectedCardsArray.length < limit || cardImg.style.border) {
+    if (!cardImg.style.border) {
+      cardImg.style.border = 'thick solid #0000FF';
+      selectedCardsArray.push(card);
+    } else {
+      cardImg.style.border = '';
+      // Remove selected card from its position
+      selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
+    }
+  }
+};
 // Displaying all the card pictures and relevant button for setting the faceup cards
 const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
   const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
@@ -228,8 +266,11 @@ const displayTableTopAndBtns = () => {
 
       // Render logged-in player's face up cards
       renderFaceUpCards(loggedInPlayerHands, loggedInPlayerFaceUpDiv);
+
+      // Keep track of selected cards for play
+      const selectedCardsArray = [];
       // Render logged-in player's private hand
-      renderCardsInHand(loggedInPlayerHands, privateHandDiv);
+      renderCardsInHand(loggedInPlayerHands, privateHandDiv, selectedCardsArray);
       // Render logged-in player's face down cards
       renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv);
 
