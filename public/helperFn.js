@@ -16,7 +16,7 @@ const getCardPicUrl = (card) => {
   return imgSrc;
 };
 
-const createUserIdAndLogOutBtnDisplay = (parentNode, response) => {
+const createUserIdLabelAndLogOutBtnDisplay = (parentNode, response) => {
   // Create the userId display and logout btn
   const userIdLabel = document.createElement('label');
   userIdLabel.innerHTML = `Logged On User Id is ${response.data.loggedInUserId}`;
@@ -43,35 +43,20 @@ const createUserIdAndLogOutBtnDisplay = (parentNode, response) => {
   parentNode.appendChild(userIdLabel);
   parentNode.appendChild(logoutBtn);
 };
-
-// make a request to the server
-// to change the deck. set 2 new cards into the player hand.
-const dealCards = function (currentGame) {
-  axios.put(`/games/${currentGame.id}/deal`)
-    .then((response) => {
-      // get the updated hand value
-      currentGame = response.data;
-
-      // If any of the current user wins in this round by having a score of 3...
-      // then he is the winner
-      if (currentGame.gameStatus === 'gameOver') {
-        const dealBtn = document.querySelector('#dealBtn');
-        dealBtn.disabled = true;
-        const displayGameOverMsg = document.querySelector('#game-over');
-        displayGameOverMsg.innerText = `Game Over. Winner is P${currentGame.currRoundWinner}`;
-      }
-    })
-    .then(() => {
-      // Update the display of the running score for both players
-
-    })
-    .catch((error) => {
-      // handle error
-      console.log(error);
-    });
+// Helper that renders face up cards
+const renderFaceUpCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  JSON.parse(selectedPlayerHandArray[0].faceUpCards).forEach((faceUpCard) => {
+    const cardImg = document.createElement('img');
+    cardImg.src = getCardPicUrl(faceUpCard);
+    cardImg.classList.add('cardPic');
+    selectedDivToAppendTo.appendChild(cardImg);
+  });
 };
 
-const outputCardPicsAndBtn = (cardsInHandResponse) => {
+// Displaying all the card pictures and relevant button for setting the faceup cards
+const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
   const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
 
   // Create a container to hold the pics
@@ -133,6 +118,61 @@ const outputCardPicsAndBtn = (cardsInHandResponse) => {
   });
 };
 
+const displayTableTopAndBtns = () => {
+  const tableTop = document.querySelector('.table-top-display');
+  tableTop.style.display = 'block';
+  // get all the faceUpCards from database and create it here
+  axios.get(`/games/${currentGame.id}`)
+    .then((response) => {
+      console.log(response.data, 'gameRoundDeets');
+      const currPlayerHands = [];
+      const opponentHands = [];
+      response.data.currGameRoundDetails.forEach((gameRound) => {
+        if (gameRound.UserId === Number(loggedInUserId)) {
+          currPlayerHands.push(gameRound);
+        } else {
+          opponentHands.push(gameRound);
+        }
+      });
+
+      const currPlayerFaceUpDiv = document.querySelector('.currPlayerFaceUpCards');
+      const opponentFaceUpDiv = document.querySelector('.opponentFaceUpCards');
+
+      renderFaceUpCards(currPlayerHands, currPlayerFaceUpDiv);
+      renderFaceUpCards(opponentHands, opponentFaceUpDiv);
+    });
+};
+
+// Make a request to the server
+// to change the deck. set 2 new cards into the player hand.
+const dealCards = function (currentGame) {
+  axios.put(`/games/${currentGame.id}/deal`)
+    .then((response) => {
+      // get the updated hand value
+      currentGame = response.data;
+
+      // If any of the current user wins in this round by having a score of 3...
+      // then he is the winner
+      if (currentGame.gameStatus === 'gameOver') {
+        const dealBtn = document.querySelector('#dealBtn');
+        dealBtn.disabled = true;
+        const displayGameOverMsg = document.querySelector('#game-over');
+        displayGameOverMsg.innerText = `Game Over. Winner is P${currentGame.currRoundWinner}`;
+      }
+    })
+    .then(() => {
+      // Update the display of the running score for both players
+
+    })
+    .catch((error) => {
+      // handle error
+      console.log(error);
+    });
+};
+
+// Display all the card pictures for both players, drawPile, discardPile,table-top cards and hand
+
+// Function that executes the setting up of game - allowing players to choose which cards to face up
 const setGame = function () {
   axios.put(`/games/${currentGame.id}/setGame`)
     .then((response) => {
@@ -147,7 +187,7 @@ const setGame = function () {
       return axios.get(`/games/${currentGame.id}/player/${Number(loggedInUserId)}`);
     })
     .then((cardsInHandResponse) => {
-      outputCardPicsAndBtn(cardsInHandResponse);
+      displaySetGameCardPicsAndBtn(cardsInHandResponse);
     })
     .catch((error) => {
       // handle error
@@ -159,7 +199,16 @@ const setGame = function () {
 const refreshGameInfo = () => {
   axios.get(`/games/${currentGame.id}`)
     .then((playerHandResponse) => {
-      outputCardPicsAndBtn(playerHandResponse);
+      console.log(playerHandResponse, 'playerHandResponse');
+
+      const { gameState: currGameState } = playerHandResponse.data.currGame;
+      console.log(currGameState, 'currGameState');
+      if (currGameState === 'setGame') {
+        displaySetGameCardPicsAndBtn(playerHandResponse);
+      } else if (currGameState === 'begin') {
+        displayTableTopAndBtns();
+        console.log('begin output');
+      }
     })
     .catch((error) => {
       console.log(error);

@@ -268,11 +268,11 @@ export default function games(db) {
       const currGameUserGameRoundsPromises = currGameRoundDetails.map((gameRound) => gameRound.getUser());
       const currGameUserGameRoundResults = await Promise.all(currGameUserGameRoundsPromises);
       const currGameRoundUsernames = currGameUserGameRoundResults.map((result) => result.username);
-      res.send({ currGameRoundDetails, currGameRoundUsernames });
+      res.send({ currGameRoundDetails, currGameRoundUsernames, currGame });
     } else if (currGame.gameState === 'setGame') {
       res.redirect(`/games/${req.params.gameId}/player/${req.loggedInUserId}`);
     } else if (currGame.gameState === 'begin') {
-      res.send({ currGameRoundDetails });
+      res.send({ currGameRoundDetails, currGame });
     }
   };
 
@@ -318,9 +318,9 @@ export default function games(db) {
         UserId: req.params.playerId,
       },
     });
-    const currGame = await playerHand.get();
-
-    res.send({ playerHand, currGame });
+    const currGame = await playerHand.getGame();
+    const currGameState = currGame.gameState;
+    res.send({ playerHand, currGame, currGameState });
   };
 
   // Perform update on user's facedown/faceup/currentHand/

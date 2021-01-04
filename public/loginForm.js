@@ -3,7 +3,7 @@ const loginContainer = document.querySelector('#loginContainer');
 axios.get('/user')
   .then((res) => {
     if (res.data.loggedInUserId) {
-      createUserIdAndLogOutBtnDisplay(loginContainer, res);
+      createUserIdLabelAndLogOutBtnDisplay(loginContainer, res);
     } else {
       createLoginForm(loginContainer);
     }

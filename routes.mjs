@@ -34,8 +34,8 @@ export default function routes(app) {
     next();
   });
   // special JS page. Include the webpack index.html file
-  app.get('/', (request, response) => {
-    response.sendFile(resolve('js/dist', 'index.html'));
+  app.get('/', (req, res) => {
+    res.sendFile(resolve('js/dist', 'index.html'));
   });
 
   const GamesController = games(db);

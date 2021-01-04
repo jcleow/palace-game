@@ -22,25 +22,70 @@
         <div class="headerDiv"></div>
       </div>
 
-      <div class="container">
-        <div class="row">
-          <div
-            class="col table-top-cards d-flex flex-row justify-content-center"
-            id="P1"
-          >
-            <!-- cardpic1 -->
-            <!-- cardpic2 -->
-            <!-- cardpic3 -->
+      <div class="container table-top table-top-display">
+        <div class="opponentCards">
+          <!-- Display Opponent's cards -->
+          <div class="row">
+            <div
+              class="col table-top-cards d-flex flex-row justify-content-center"
+              id="P1"
+            >
+              <div class="opponentFaceUpCards">
+                <!-- Append the card pics here -->
+              </div>
+            </div>
+          </div>
+          <!-- Display face down cards -->
+          <div class="row">
+            <div
+              class="col table-top-cards d-flex flex-row justify-content-center"
+              id="P2"
+            >
+              <div class="opponentFaceDownCards">
+                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+              </div>
+            </div>
           </div>
         </div>
-        <div class="row">
-          <div
-            class="col table-top-cards d-flex flex-row justify-content-center"
-            id="P2"
-          >
-            <!-- cardpic1 -->
-            <!-- cardpic2 -->
-            <!-- cardpic3 -->
+        <div class="remainingCards">
+          <div class="row">
+            <div
+              class="col table-top-cards d-flex flex-row justify-content-center"
+              id="P1"
+            >
+              <!-- Display DrawPile & DiscardPile cards -->
+              <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+              <img class="cardPic" src="/cardPictures/HEART-1.png" />
+            </div>
+          </div>
+        </div>
+        <!-- Display current Player's cards -->
+        <div class="currPlayerCards">
+          <!-- Display face down cards -->
+          <div class="row">
+            <div
+              class="col table-top-cards d-flex flex-row justify-content-center"
+              id="P2"
+            >
+              <div class="currPlayerFaceDownCards">
+                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+              </div>
+            </div>
+          </div>
+          <!-- Display face up cards -->
+          <div class="row">
+            <div
+              class="col table-top-cards d-flex flex-row justify-content-center"
+              id="P2"
+            >
+              <div class="currPlayerFaceUpCards">
+                <!-- Append the card pics here -->
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -37,7 +37,8 @@ gameButtonsDiv.appendChild(createGameBtn);
 axios.get('/games')
   .then((onGoingGameResponses) => {
     // set loggedInUserId obtained from server
-    loggedInUserId = onGoingGameResponses.data.loggedInUserId;
+
+    loggedInUserId = Number(onGoingGameResponses.data.loggedInUserId);
 
     // If there are more than 1 ongoing games, display these games
     if (onGoingGameResponses.data.allOngoingGamesArray) {

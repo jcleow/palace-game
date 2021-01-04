@@ -1,43 +1,43 @@
-/**
- * /* * @format
- * 
- * .playerDisplay {
- *   height: 50px;
- *   width: 50px;
- *   display: flex;
- *   justify-content: center;
- *   align-items: center;
- *   background-color: lightblue;
- * }
- * 
- * .playerScoreDisplay {
- *   height: 50px;
- *   width: 50px;
- *   display: flex;
- *   justify-content: center;
- *   align-items: center;
- * }
- * 
- * .playerDisplayContainer {
- *   display: none;
- * }
- * 
- * #player1Win,
- * #player2Win {
- *   width: 50px;
- * }
- * 
- * .game-buttons {
- *   display: flex;
- *   flex-direction: column;
- *   justify-content: center;
- *   align-items: center;
- * }
- *
- * @format
- */
+/** @format */
 
 .cardPic {
-  width: 200px;
+  width: 100px;
   height: auto;
+  border: solid 1px grey;
+  border-radius: 10px;
+  margin: 5px;
+  background-color: white;
+}
+.remainingCards {
+  margin-top: 25vh;
+}
+.opponentFaceUpCards {
+  position: absolute;
+  top: 30px;
+  z-index: 1;
+}
+
+.opponentFaceDownCards {
+  position: absolute;
+  z-index: 0;
+}
+
+.currPlayerFaceUpCards {
+  position: absolute;
+  z-index: 3;
+}
+.currPlayerFaceDownCards {
+  position: absolute;
+  top: 30px;
+  z-index: 2;
+}
+
+.table-top {
+  position: relative;
+  min-height: 550px;
+  background-color: lightblue;
+  border-radius: 5px;
+}
+.table-top-display {
+  display: none;
 }
