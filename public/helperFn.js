@@ -18,7 +18,7 @@ const getCardPicUrl = (card) => {
 
 // Update in header div which players have joined
 const updateUsersJoinedDiv = (currGameRoundUsernames) => {
-  const headerDiv = document.querySelector('.headerDiv');
+  const headerDiv = document.querySelector('.header-div');
   headerDiv.innerHTML = '';
   currGameRoundUsernames.forEach((username) => {
     headerDiv.innerText += `${username} has joined the game \n`;
@@ -26,7 +26,7 @@ const updateUsersJoinedDiv = (currGameRoundUsernames) => {
 };
 // Update in header which player's turn it is with player's username
 const updatePlayerActionDiv = (currPlayer) => {
-  const headerDiv = document.querySelector('.headerDiv');
+  const headerDiv = document.querySelector('.header-div');
   headerDiv.innerText = `It's ${currPlayer.username}'s turn`;
 };
 
@@ -43,7 +43,7 @@ const createUserIdLabelAndLogOutBtnDisplay = (parentNode, response) => {
       .then((logoutResponse) => {
         console.log(logoutResponse);
         // Query for the login container
-        const loginContainer = document.querySelector('#loginContainer');
+        const loginContainer = document.querySelector('#login-container');
 
         // Remove userId-label and logout btn
         loginContainer.removeChild(userIdLabel);
@@ -187,7 +187,7 @@ const dealCards = (currentGame) => {
       // If any of the current user wins in this round by having a score of 3...
       // then he is the winner
       if (currentGame.gameStatus === 'gameOver') {
-        const dealBtn = document.querySelector('#dealBtn');
+        const dealBtn = document.querySelector('#deal-btn');
         dealBtn.disabled = true;
         const displayGameOverMsg = document.querySelector('#game-over');
         displayGameOverMsg.innerText = `Game Over. Winner is P${currentGame.currRoundWinner}`;
@@ -212,7 +212,7 @@ const setGame = () => {
       currentGame = response.data;
       loggedInUserId = response.data.loggedInUserId;
       // remove start game button
-      const startGameBtn = document.querySelector('#startBtn');
+      const startGameBtn = document.querySelector('#start-btn');
       const gameInterface = document.querySelector('#game-interface');
       gameInterface.removeChild(startGameBtn);
 
@@ -255,7 +255,7 @@ const refreshGameInfo = () => {
 const createStartBtn = () => {
   const startBtn = document.createElement('button');
   startBtn.innerText = 'Start';
-  startBtn.setAttribute('id', 'startBtn');
+  startBtn.setAttribute('id', 'start-btn');
   startBtn.addEventListener('click', setGame);
   return startBtn;
 };
@@ -264,7 +264,7 @@ const createStartBtn = () => {
 const createDealBtn = () => {
   const dealBtn = document.createElement('button');
   dealBtn.innerText = 'Deal';
-  dealBtn.setAttribute('id', 'dealBtn');
+  dealBtn.setAttribute('id', 'deal-btn');
   dealBtn.addEventListener('click', dealCards);
   return dealBtn;
 };
@@ -273,7 +273,7 @@ const createDealBtn = () => {
 const createRefreshBtn = () => {
   const refreshBtn = document.createElement('button');
   refreshBtn.innerHTML = 'Refresh';
-  refreshBtn.setAttribute('id', 'refreshBtn');
+  refreshBtn.setAttribute('id', 'refresh-btn');
   refreshBtn.addEventListener('click', refreshGameInfo);
   return refreshBtn;
 };

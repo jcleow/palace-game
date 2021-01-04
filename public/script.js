@@ -10,7 +10,7 @@ const createGameBtn = document.createElement('button');
 const createGame = function () {
   gameInterface.removeChild(gameButtonsDiv);
   // Display Waiting for players
-  const headerDiv = document.querySelector('.headerDiv');
+  const headerDiv = document.querySelector('.header-div');
   headerDiv.innerText = 'Waiting for players...';
 
   // Make a request to create a new game
@@ -65,8 +65,8 @@ axios.get('/games')
               // Display deal & refresh buttons
               // Remove and reappend everytime a new game button is clicked
               // (to prevent disabled deal button specific to a game)
-              const existingStartBtn = document.querySelector('#startBtn');
-              const existingRefreshBtn = document.querySelector('#refreshBtn');
+              const existingStartBtn = document.querySelector('#start-btn');
+              const existingRefreshBtn = document.querySelector('#refresh-btn');
 
               if (existingStartBtn) {
                 gameInterface.removeChild(existingStartBtn);
