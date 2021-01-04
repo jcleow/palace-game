@@ -47,10 +47,13 @@ export default function routes(app) {
   app.get('/games/:id/score', GamesController.score);
 
   // get selected player's first 6 cards
-  app.get('/games/:gameId/player/:playerId', GamesController.displayHand);
+  app.get('/games/:gameId/players/:playerId', GamesController.displayHand);
 
-  // Update player's hand /facedown cards
-  app.put('/games/:gameId/player/:playerId', GamesController.updateHand);
+  // Update player's hand /facedown cards after setting the game
+  app.put('/games/:gameId/players/:playerId', GamesController.updateHand);
+
+  // Business logic for all the moves(play) made inside the main game
+  app.put('/games/:gameId/players/:playerId/play', GamesController.play);
 
   // create a new game
   app.post('/games', GamesController.create);
@@ -58,7 +61,6 @@ export default function routes(app) {
   app.put('/games/:id/setGame', GamesController.setGame);
   // update a game with new cards
   app.put('/games/:id/deal', GamesController.deal);
-
   // To insert into GamesUsers table when another player joins the game
   app.post('/games/:gameId/join/:playerId', GamesController.join);
 

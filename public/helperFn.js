@@ -87,7 +87,7 @@ const renderFaceDownCards = (selectedPlayerHandArray, selectedDivToAppendTo) => 
   });
 };
 
-const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo, selectedCardsArray) => {
+const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo, selectedCardsArray, topDiscardedCard) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
   JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard) => {
@@ -97,7 +97,7 @@ const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo, selec
     selectedDivToAppendTo.appendChild(cardImg);
 
     cardImg.addEventListener('click', () => {
-      selectCards(selectedCardsArray, cardImg, faceUpCard, 3);
+      selectCardsToPlay(selectedCardsArray, cardImg, faceUpCard, topDiscardedCard);
     });
   });
 };
@@ -149,16 +149,36 @@ const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) =
  * anyone time
  *
  */
-const selectCards = (selectedCardsArray, cardImg, card, limit) => {
-  if (selectedCardsArray.length < limit || cardImg.style.border) {
-    if (!cardImg.style.border) {
-      cardImg.style.border = 'thick solid #0000FF';
-      selectedCardsArray.push(card);
+const selectCardsToPlay = (selectedCardsArray, cardImg, card, topDiscardedCard) => {
+  // Probably not necessary to remove invalid selection at first
+  //  since card images are recreated everytime
+  // if (cardImg.classList.contains('invalid-selection')) {
+  //   cardImg.classList.remove('invalid-selection');
+  // }
+
+  // If selecting a previously unselected card...
+  if (!cardImg.style.border) {
+    // Check if current card selected has a higher or same rank as discardPileCard
+    if (card.rank >= topDiscardedCard.rank) {
+    // Next, check if another card has already been selected...
+      if (selectedCardsArray.length > 0) {
+      // Next check if this card selected has the same rank as the other selected card
+        if (selectedCardsArray[0].rank === card.rank) {
+          cardImg.style.border = 'thick solid #0000FF';
+          selectedCardsArray.push(card);
+        } else {
+          cardImg.classList.add('invalid-selection');
+          console.log('flashing red border to show that this card cannot be selected');
+        }
+      }
     } else {
-      cardImg.style.border = '';
-      // Remove selected card from its position
-      selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
+      cardImg.classList.add('invalid-selection');
+      console.log('flashing red border to show that this card cannot be selected');
     }
+  } else {
+    cardImg.style.border = '';
+    // Remove selected card from its position
+    selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
   }
 };
 // Displaying all the card pictures and relevant button for setting the faceup cards
@@ -206,7 +226,7 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
     document.body.removeChild(faceDownBtn);
 
     // Perform request to server to update faceDownCards
-    axios.put(`/games/${currentGame.id}/player/${loggedInUserId}`, selectedCardsArray)
+    axios.put(`/games/${currentGame.id}/players/${loggedInUserId}`, selectedCardsArray)
       .then((editResponse) => {
         console.log(editResponse);
         console.log(editResponse, 'editResponse');
@@ -248,6 +268,8 @@ const displayTableTopAndBtns = () => {
       // Obtain the currGame discard and draw pile data
       const { currGame } = response.data;
       const { drawPile: drawPileJSON, discardPile: discardPileJSON } = currGame;
+      // Get the most recently discarded card
+      const topDiscardedCard = JSON.parse(discardPileJSON).pop();
 
       const loggedInPlayerFaceUpDiv = document.querySelector('.logged-in-player-face-up-cards ');
       const opponentFaceUpDiv = document.querySelector('.opponent-face-up-cards');
@@ -269,13 +291,28 @@ const displayTableTopAndBtns = () => {
 
       // Keep track of selected cards for play
       const selectedCardsArray = [];
-      // Render logged-in player's private hand
-      renderCardsInHand(loggedInPlayerHands, privateHandDiv, selectedCardsArray);
+      // Render logged-in player's private hand complete with client-side validation
+      // of cards to play
+      renderCardsInHand(loggedInPlayerHands, privateHandDiv, selectedCardsArray, topDiscardedCard);
       // Render logged-in player's face down cards
       renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv);
-
       // Render draw pile and discard pile
       renderMiscCards(drawPileJSON, discardPileJSON, centerMiscCardsDiv);
+
+      // If it is loggedInUser's turn surface the [Play] button
+      if (currGame.CurrentPlayerId === Number(loggedInUserId)) {
+        const playBtn = document.createElement('button');
+        playBtn.innerText = 'Play Selected Cards';
+        document.body.appendChild(playBtn);
+
+        playBtn.addEventListener('click', () => {
+          axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`)
+            .then((playCardsResponse) => {
+              console.log(playCardsResponse);
+            })
+            .catch((error) => { console.log(error); });
+        });
+      }
     });
 };
 
@@ -320,7 +357,7 @@ const setGame = () => {
       gameInterface.removeChild(startGameBtn);
 
       // Display each loggedIn player's cards
-      return axios.get(`/games/${currentGame.id}/player/${Number(loggedInUserId)}`);
+      return axios.get(`/games/${currentGame.id}/players/${Number(loggedInUserId)}`);
     })
     .then((cardsInHandResponse) => {
       displaySetGameCardPicsAndBtn(cardsInHandResponse);

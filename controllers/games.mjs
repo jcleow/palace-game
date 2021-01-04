@@ -270,7 +270,7 @@ export default function games(db) {
       const currGameRoundUsernames = currGameUserGameRoundResults.map((result) => result.username);
       res.send({ currGameRoundDetails, currGameRoundUsernames, currGame });
     } else if (currGame.gameState === 'setGame') {
-      res.redirect(`/games/${req.params.gameId}/player/${req.loggedInUserId}`);
+      res.redirect(`/games/${req.params.gameId}/players/${req.loggedInUserId}`);
     } else if (currGame.gameState === 'begin') {
       // Find player's userid where playerNum is 1...
       const currPlayer = await db.User.findOne({
@@ -434,6 +434,30 @@ export default function games(db) {
     res.send({ currentGame, message: 'user has joined the game before' });
   };
 
+  const play = async (req, res) => {
+    const cardsToBePlayed = req.body;
+    console.log(cardsToBePlayed, 'cardsToBePlayed');
+    const selectedGameRound = await db.GamesUser.findOne({
+      where: {
+        GameId: req.params.gameId,
+        UserId: req.params.playerId,
+      },
+    });
+
+    // Perform check to see if the move is legal
+    // First check how many cards are selected
+
+    // If move is legal, push cardsTobePlayed into discardPile
+    // Draw cards until there are 3 cards in hand
+
+    // If move is illegal, retrieve all cards from discardPile into Hand
+
+    //* ** Player Turn has Ended ***//
+
+    // Change Player Turn
+    res.send('update completed');
+  };
+
   // return all functions we define in an object
   // refer to the routes file above to see this used
   return {
@@ -448,5 +472,6 @@ export default function games(db) {
     updatePile,
     score,
     join,
+    play,
   };
 }

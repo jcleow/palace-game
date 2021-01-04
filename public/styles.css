@@ -42,3 +42,16 @@
 .table-top-display {
   display: none;
 }
+
+.invalid-selection {
+  border: 5px #ff0000 solid;
+
+  animation: blink 0.5s;
+  animation-iteration-count: 3;
+}
+
+@keyframes blink {
+  50% {
+    border-color: #fff;
+  }
+}
