@@ -345,6 +345,27 @@ export default function games(db) {
         UserId: req.params.playerId,
       },
     });
+
+    // Update the player's cardsInHand
+    const existingPlayerCardsInHand = JSON.parse(playerHand.cardsInHand);
+    console.log(existingPlayerCardsInHand, 'existing cards in hand ');
+    console.log(selectedCardsArray, 'selectedCardsArray');
+    // For each of selectedCards, remove the same card in player's hand
+    selectedCardsArray.forEach((selectedCard) => {
+      // If the selected card is present inside the player's hand...
+      const indexOfFaceUpCard = existingPlayerCardsInHand.findIndex((card) => JSON.stringify(card) === JSON.stringify(selectedCard));
+      // We remove it
+      if (indexOfFaceUpCard > -1) {
+        existingPlayerCardsInHand.splice(indexOfFaceUpCard, 1);
+        console.log(existingPlayerCardsInHand, 'spliced hand');
+      }
+    });
+    playerHand.cardsInHand = JSON.stringify(existingPlayerCardsInHand);
+    playerHand.changed('cardsInHand', true);
+    await playerHand.save();
+    console.log(playerHand.cardsInHand, 'updated cards in Hand');
+
+    // Update the player's faceUpCards
     playerHand.faceUpCards = JSON.stringify(selectedCardsArray);
     playerHand.changed('faceUpCards', true);
     await playerHand.save();
@@ -357,7 +378,6 @@ export default function games(db) {
 
       },
     });
-    console.log(allPlayerHandsArray, 'any cards inside?');
     // If so change gameState to 'start'
     if (allPlayerHandsArray.length === 0) {
       const currGame = await playerHand.getGame();

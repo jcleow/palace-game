@@ -69,6 +69,17 @@ const renderFaceUpCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   });
 };
 
+const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard) => {
+    const cardImg = document.createElement('img');
+    cardImg.src = getCardPicUrl(faceUpCard);
+    cardImg.classList.add('cardPic');
+    selectedDivToAppendTo.appendChild(cardImg);
+  });
+};
+
 // Displaying all the card pictures and relevant button for setting the faceup cards
 const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
   const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
@@ -144,6 +155,7 @@ const displayTableTopAndBtns = () => {
     .then((response) => {
       const currPlayerHands = [];
       const opponentHands = [];
+
       response.data.currGameRoundDetails.forEach((gameRound) => {
         if (gameRound.UserId === Number(loggedInUserId)) {
           currPlayerHands.push(gameRound);
@@ -154,9 +166,13 @@ const displayTableTopAndBtns = () => {
 
       const currPlayerFaceUpDiv = document.querySelector('.currPlayerFaceUpCards');
       const opponentFaceUpDiv = document.querySelector('.opponentFaceUpCards');
-
+      const privateHandDiv = document.querySelector('.privateHandCards');
+      // Render logged-in player's face up cards
       renderFaceUpCards(currPlayerHands, currPlayerFaceUpDiv);
+      // Render opponent player's face up cards
       renderFaceUpCards(opponentHands, opponentFaceUpDiv);
+      // Render logged-in player's private hand
+      renderCardsInHand(currPlayerHands, privateHandDiv);
     });
 };
 
