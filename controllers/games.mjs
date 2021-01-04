@@ -348,8 +348,7 @@ export default function games(db) {
 
     // Update the player's cardsInHand
     const existingPlayerCardsInHand = JSON.parse(playerHand.cardsInHand);
-    console.log(existingPlayerCardsInHand, 'existing cards in hand ');
-    console.log(selectedCardsArray, 'selectedCardsArray');
+
     // For each of selectedCards, remove the same card in player's hand
     selectedCardsArray.forEach((selectedCard) => {
       // If the selected card is present inside the player's hand...
@@ -363,7 +362,6 @@ export default function games(db) {
     playerHand.cardsInHand = JSON.stringify(existingPlayerCardsInHand);
     playerHand.changed('cardsInHand', true);
     await playerHand.save();
-    console.log(playerHand.cardsInHand, 'updated cards in Hand');
 
     // Update the player's faceUpCards
     playerHand.faceUpCards = JSON.stringify(selectedCardsArray);
@@ -383,6 +381,18 @@ export default function games(db) {
       const currGame = await playerHand.getGame();
       currGame.gameState = 'begin';
       await currGame.save();
+
+      // Draw a random card from the drawPile
+      const drawPile = JSON.parse(currGame.drawPile);
+
+      // Push the top card from drawPile into the discardPile to set the game
+      const discardPile = [];
+      discardPile.push(drawPile.pop());
+
+      currGame.discardPile = JSON.stringify(discardPile);
+      currGame.changed('discardPile', true);
+      await currGame.save();
+
       res.send({ setGame: 'completed', message: 'Set Game Completed' });
       return;
     }
@@ -394,6 +404,7 @@ export default function games(db) {
 
   };
 
+  // Inserts a new entry into GamesUser table when a new user joins
   const join = async (req, res) => {
     // First, find if the user has joined this room before
     const currentPlayerEntry = await db.GamesUser.findOne({
@@ -423,10 +434,6 @@ export default function games(db) {
     res.send({ currentGame, message: 'user has joined the game before' });
   };
 
-  const getCurrentPlayerNum = async (req, res) => {
-    const currentplayer = await db.User.findByPk(req.params.currentPlayerId);
-  };
-
   // return all functions we define in an object
   // refer to the routes file above to see this used
   return {
@@ -441,6 +448,5 @@ export default function games(db) {
     updatePile,
     score,
     join,
-    getCurrentPlayerNum,
   };
 }

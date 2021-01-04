@@ -101,6 +101,28 @@ const renderOpponentHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   });
 };
 
+const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  // Rendering draw pile picture (if it still exists)
+  const drawPileArray = JSON.parse(drawPileJSON);
+  if (drawPileArray.length > 0) {
+    const drawPileImg = document.createElement('img');
+    drawPileImg.src = '/cardPictures/COVER-CARD.png';
+    drawPileImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(drawPileImg);
+  }
+
+  // Rendering discard pile picture if it is more than 1
+  const discardPile = JSON.parse(discardPileJSON);
+  if (drawPileArray.length > 0) {
+    const discardedCardImg = document.createElement('img');
+    discardedCardImg.src = getCardPicUrl(discardPile[discardPile.length - 1]);
+    discardedCardImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(discardedCardImg);
+  }
+};
+
 // Displaying all the card pictures and relevant button for setting the faceup cards
 const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
   const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
@@ -174,16 +196,20 @@ const displayTableTopAndBtns = () => {
   // get all the faceUpCards from database and create it here
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
-      const currPlayerHands = [];
+      // Classify the response data round details into
+      // either logged-in player array or opponent hand array
+      const loggedInPlayerHands = [];
       const opponentHands = [];
-
       response.data.currGameRoundDetails.forEach((gameRound) => {
         if (gameRound.UserId === Number(loggedInUserId)) {
-          currPlayerHands.push(gameRound);
+          loggedInPlayerHands.push(gameRound);
         } else {
           opponentHands.push(gameRound);
         }
       });
+      // Obtain the currGame discard and draw pile data
+      const { currGame } = response.data;
+      const { drawPile: drawPileJSON, discardPile: discardPileJSON } = currGame;
 
       const loggedInPlayerFaceUpDiv = document.querySelector('.logged-in-player-face-up-cards ');
       const opponentFaceUpDiv = document.querySelector('.opponent-face-up-cards');
@@ -191,6 +217,7 @@ const displayTableTopAndBtns = () => {
       const opponentHandDiv = document.querySelector('.opponent-private-hand');
       const loggedInPlayerFaceDownDiv = document.querySelector('.logged-in-player-face-down-cards');
       const opponentFaceDownDiv = document.querySelector('.opponent-face-down-cards');
+      const centerMiscCardsDiv = document.querySelector('.center-misc-cards');
 
       // Render opponent player's private hand
       renderOpponentHand(opponentHands, opponentHandDiv);
@@ -200,11 +227,14 @@ const displayTableTopAndBtns = () => {
       renderFaceDownCards(opponentHands, opponentFaceDownDiv);
 
       // Render logged-in player's face up cards
-      renderFaceUpCards(currPlayerHands, loggedInPlayerFaceUpDiv);
+      renderFaceUpCards(loggedInPlayerHands, loggedInPlayerFaceUpDiv);
       // Render logged-in player's private hand
-      renderCardsInHand(currPlayerHands, privateHandDiv);
+      renderCardsInHand(loggedInPlayerHands, privateHandDiv);
       // Render logged-in player's face down cards
-      renderFaceDownCards(currPlayerHands, loggedInPlayerFaceDownDiv);
+      renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv);
+
+      // Render draw pile and discard pile
+      renderMiscCards(drawPileJSON, discardPileJSON, centerMiscCardsDiv);
     });
 };
 

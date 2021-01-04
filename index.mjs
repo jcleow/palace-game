@@ -13,6 +13,8 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: false }));
 
 app.use(express.static('public'));
+
+// To enable reading of the (JSON) request from axios.post
 app.use(express.json());
 
 app.use(methodOverride('_method'));
