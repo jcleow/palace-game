@@ -75,10 +75,7 @@ axios.get('/games')
                 gameInterface.removeChild(existingRefreshBtn);
               }
               gameInterface.appendChild(createRefreshBtn());
-              const headerDiv = document.querySelector('.headerDiv');
-              currGameRoundUsernames.forEach((username) => {
-                headerDiv.innerText += `${username} has joined the game \n`;
-              });
+              updateUsersJoinedDiv(currGameRoundUsernames);
             })
             .catch((error) => { console.log(error); });
         });

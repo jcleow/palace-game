@@ -16,6 +16,14 @@ const getCardPicUrl = (card) => {
   return imgSrc;
 };
 
+const updateUsersJoinedDiv = (currGameRoundUsernames) => {
+  const headerDiv = document.querySelector('.headerDiv');
+  headerDiv.innerHTML = '';
+  currGameRoundUsernames.forEach((username) => {
+    headerDiv.innerText += `${username} has joined the game \n`;
+  });
+};
+
 const createUserIdLabelAndLogOutBtnDisplay = (parentNode, response) => {
   // Create the userId display and logout btn
   const userIdLabel = document.createElement('label');
@@ -145,7 +153,7 @@ const displayTableTopAndBtns = () => {
 
 // Make a request to the server
 // to change the deck. set 2 new cards into the player hand.
-const dealCards = function (currentGame) {
+const dealCards = (currentGame) => {
   axios.put(`/games/${currentGame.id}/deal`)
     .then((response) => {
       // get the updated hand value
@@ -173,7 +181,7 @@ const dealCards = function (currentGame) {
 // Display all the card pictures for both players, drawPile, discardPile,table-top cards and hand
 
 // Function that executes the setting up of game - allowing players to choose which cards to face up
-const setGame = function () {
+const setGame = () => {
   axios.put(`/games/${currentGame.id}/setGame`)
     .then((response) => {
       currentGame = response.data;
@@ -198,13 +206,14 @@ const setGame = function () {
 // Function that gets the existing state of the game from the table through AJAX
 const refreshGameInfo = () => {
   axios.get(`/games/${currentGame.id}`)
-    .then((playerHandResponse) => {
-      console.log(playerHandResponse, 'playerHandResponse');
-
-      const { gameState: currGameState } = playerHandResponse.data.currGame;
-      console.log(currGameState, 'currGameState');
-      if (currGameState === 'setGame') {
-        displaySetGameCardPicsAndBtn(playerHandResponse);
+    .then((response) => {
+      const { gameState: currGameState } = response.data.currGame;
+      const { currGameRoundUsernames } = response.data;
+      if (currGameState === 'waiting') {
+        // update users who have joined the game
+        updateUsersJoinedDiv(currGameRoundUsernames);
+      } else if (currGameState === 'setGame') {
+        displaySetGameCardPicsAndBtn(response);
       } else if (currGameState === 'begin') {
         displayTableTopAndBtns();
         console.log('begin output');
