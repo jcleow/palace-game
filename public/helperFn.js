@@ -68,6 +68,16 @@ const renderFaceUpCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
     selectedDivToAppendTo.appendChild(cardImg);
   });
 };
+const renderFaceDownCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  JSON.parse(selectedPlayerHandArray[0].faceDownCards).forEach((faceUpCard) => {
+    const cardImg = document.createElement('img');
+    cardImg.src = '/cardPictures/COVER-CARD.png';
+    cardImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(cardImg);
+  });
+};
 
 const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   // Clear everything in the existing div and re-add in new cards
@@ -75,6 +85,17 @@ const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard) => {
     const cardImg = document.createElement('img');
     cardImg.src = getCardPicUrl(faceUpCard);
+    cardImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(cardImg);
+  });
+};
+
+const renderOpponentHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard) => {
+    const cardImg = document.createElement('img');
+    cardImg.src = '/cardPictures/COVER-CARD.png';
     cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
   });
@@ -164,15 +185,26 @@ const displayTableTopAndBtns = () => {
         }
       });
 
-      const currPlayerFaceUpDiv = document.querySelector('.logged-in-player-face-up-cards ');
+      const loggedInPlayerFaceUpDiv = document.querySelector('.logged-in-player-face-up-cards ');
       const opponentFaceUpDiv = document.querySelector('.opponent-face-up-cards');
       const privateHandDiv = document.querySelector('.logged-in-player-private-hand');
-      // Render logged-in player's face up cards
-      renderFaceUpCards(currPlayerHands, currPlayerFaceUpDiv);
+      const opponentHandDiv = document.querySelector('.opponent-private-hand');
+      const loggedInPlayerFaceDownDiv = document.querySelector('.logged-in-player-face-down-cards');
+      const opponentFaceDownDiv = document.querySelector('.opponent-face-down-cards');
+
+      // Render opponent player's private hand
+      renderOpponentHand(opponentHands, opponentHandDiv);
       // Render opponent player's face up cards
       renderFaceUpCards(opponentHands, opponentFaceUpDiv);
+      // Render opponent's face down cards
+      renderFaceDownCards(opponentHands, opponentFaceDownDiv);
+
+      // Render logged-in player's face up cards
+      renderFaceUpCards(currPlayerHands, loggedInPlayerFaceUpDiv);
       // Render logged-in player's private hand
       renderCardsInHand(currPlayerHands, privateHandDiv);
+      // Render logged-in player's face down cards
+      renderFaceDownCards(currPlayerHands, loggedInPlayerFaceDownDiv);
     });
 };
 

@@ -9,7 +9,8 @@
   background-color: white;
 }
 .remaining-cards {
-  margin-top: 25vh;
+  margin-top: 22vh;
+  margin-bottom: 5vh;
 }
 .opponent-face-up-cards {
   position: absolute;
@@ -34,7 +35,7 @@
 
 .table-top {
   position: relative;
-  min-height: 550px;
+  min-height: 637px;
   background-color: lightblue;
   border-radius: 5px;
 }

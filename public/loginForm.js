@@ -1,4 +1,4 @@
-const loginContainer = document.querySelector('#loginContainer');
+const loginContainer = document.querySelector('#login-container');
 // Create all the elements inside loginContainer div for login form
 axios.get('/user')
   .then((res) => {
