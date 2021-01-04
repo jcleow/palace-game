@@ -62,6 +62,9 @@ export default function routes(app) {
   // To insert into GamesUsers table when another player joins the game
   app.post('/games/:gameId/join/:playerId', GamesController.join);
 
+  // Get current playerNum
+  app.get('/games/:gameId/currentPlayerNum/:currentPlayerId', GamesController.getCurrentPlayerNum);
+
   // // refresh page to get current status of game
   // app.get('/currentGameStatus/:id', GamesController.show);
 

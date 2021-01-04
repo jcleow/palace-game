@@ -16,12 +16,18 @@ const getCardPicUrl = (card) => {
   return imgSrc;
 };
 
+// Update in header div which players have joined
 const updateUsersJoinedDiv = (currGameRoundUsernames) => {
   const headerDiv = document.querySelector('.headerDiv');
   headerDiv.innerHTML = '';
   currGameRoundUsernames.forEach((username) => {
     headerDiv.innerText += `${username} has joined the game \n`;
   });
+};
+// Update in header which player's turn it is with player's username
+const updatePlayerActionDiv = (currPlayer) => {
+  const headerDiv = document.querySelector('.headerDiv');
+  headerDiv.innerText = `It's ${currPlayer.username}'s turn`;
 };
 
 const createUserIdLabelAndLogOutBtnDisplay = (parentNode, response) => {
@@ -111,14 +117,18 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
     axios.put(`/games/${currentGame.id}/player/${loggedInUserId}`, selectedCardsArray)
       .then((editResponse) => {
         console.log(editResponse);
+        console.log(editResponse, 'editResponse');
         // if all players have completed setting up their faceUpCards...
         if (editResponse.data.setGame === 'completed') {
           return axios.get(`/games/${currentGame.id}`);
         }
       })
       .then((currentGameResponse) => {
-        console.log(currentGameResponse, 'currentGameDataResponse');
-        // Render the pictures on the table
+        if (currentGameResponse) {
+          console.log(currentGameResponse, 'currentGameDataResponse');
+          // Render the pictures on the table
+          displayTableTopAndBtns();
+        }
       })
       .catch((error) => {
         console.log(error);
@@ -132,7 +142,6 @@ const displayTableTopAndBtns = () => {
   // get all the faceUpCards from database and create it here
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
-      console.log(response.data, 'gameRoundDeets');
       const currPlayerHands = [];
       const opponentHands = [];
       response.data.currGameRoundDetails.forEach((gameRound) => {
@@ -208,15 +217,17 @@ const refreshGameInfo = () => {
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
       const { gameState: currGameState } = response.data.currGame;
-      const { currGameRoundUsernames } = response.data;
+      const { currGameRoundUsernames, currPlayer } = response.data;
       if (currGameState === 'waiting') {
         // update users who have joined the game
         updateUsersJoinedDiv(currGameRoundUsernames);
       } else if (currGameState === 'setGame') {
         displaySetGameCardPicsAndBtn(response);
       } else if (currGameState === 'begin') {
+        // Update to see who is the current user(name) to play
+        updatePlayerActionDiv(currPlayer);
+        // Display all the cards on the table as well as cards in each player's hand
         displayTableTopAndBtns();
-        console.log('begin output');
       }
     })
     .catch((error) => {

@@ -272,7 +272,20 @@ export default function games(db) {
     } else if (currGame.gameState === 'setGame') {
       res.redirect(`/games/${req.params.gameId}/player/${req.loggedInUserId}`);
     } else if (currGame.gameState === 'begin') {
-      res.send({ currGameRoundDetails, currGame });
+      // Find player's userid where playerNum is 1...
+      const currPlayer = await db.User.findOne({
+        include: {
+          model: db.GamesUser,
+          where: {
+            playerNum: 1,
+            GameId: currGame.id,
+          },
+        },
+      });
+
+      // Add playerOne's Id into target table (Games)
+      await currPlayer.addCurrentPlayerTurn(currGame);
+      res.send({ currGameRoundDetails, currGame, currPlayer });
     }
   };
 
@@ -390,6 +403,10 @@ export default function games(db) {
     res.send({ currentGame, message: 'user has joined the game before' });
   };
 
+  const getCurrentPlayerNum = async (req, res) => {
+    const currentplayer = await db.User.findByPk(req.params.currentPlayerId);
+  };
+
   // return all functions we define in an object
   // refer to the routes file above to see this used
   return {
@@ -404,5 +421,6 @@ export default function games(db) {
     updatePile,
     score,
     join,
+    getCurrentPlayerNum,
   };
 }

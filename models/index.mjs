@@ -51,12 +51,9 @@ db.GamesUser.belongsTo(db.User);
 
 // Creating another association between User and Game through alias of 'Wins'
 db.User.hasMany(db.Game, { as: 'Wins', foreignKey: 'WinnerId' });
-// (async () => console.log((await db.User.findAll({
-//   include: [{
-//     model: db.Game,
-//     as: 'Wins',
-//   }],
-// })), 'alias'))();
+
+// Creating another association between User and Game through alias of 'CurrentPlayerTurn'
+db.User.hasMany(db.Game, { as: 'CurrentPlayerTurns', foreignKey: 'CurrentPlayerId' });
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
