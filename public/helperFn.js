@@ -14,8 +14,14 @@ let loggedInUserId;
 // Function that generates the path to each individual card
 const getCardPicUrl = (card) => {
   let imgSrc = '';
+
   // get directory for each of the cards
   imgSrc = `/cardPictures/${card.suit.toUpperCase()}-${card.rank}`;
+
+  // If Ace is drawn, reassign Ace's rank to 1 for rendering picture purposes
+  if (card.rank === 14) {
+    imgSrc = `/cardPictures/${card.suit.toUpperCase()}-${1}`;
+  }
   if (card.rank >= 11 && card.rank <= 13) {
     imgSrc += `-${card.name.toUpperCase()}`;
   }
@@ -150,26 +156,33 @@ const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) =
  *
  */
 const selectCardsToPlay = (selectedCardsArray, cardImg, card, topDiscardedCard) => {
-  // Probably not necessary to remove invalid selection at first
-  //  since card images are recreated everytime
-  // if (cardImg.classList.contains('invalid-selection')) {
-  //   cardImg.classList.remove('invalid-selection');
-  // }
+  // Need to remove flashing red border if say a user decides to pick another higher value card
+  // instead of the first higher value card previously chosen
+  if (cardImg.classList.contains('invalid-selection')) {
+    console.log(cardImg.classList.contains('invalid-selection'), 'contains red flashy border?');
+    cardImg.classList.remove('invalid-selection');
+  }
 
   // If selecting a previously unselected card...
   if (!cardImg.style.border) {
     // Check if current card selected has a higher or same rank as discardPileCard
     if (card.rank >= topDiscardedCard.rank) {
-    // Next, check if another card has already been selected...
+      cardImg.style.border = 'thick solid #0000FF';
+      // Next, check if another card has already been selected...
       if (selectedCardsArray.length > 0) {
-      // Next check if this card selected has the same rank as the other selected card
+        // Next check if this card selected has the same rank as the other selected card
+        // If the 2 cards have the same rank means they are the same card...
         if (selectedCardsArray[0].rank === card.rank) {
-          cardImg.style.border = 'thick solid #0000FF';
           selectedCardsArray.push(card);
+          // Otherwise this is an invalid selection
         } else {
+          cardImg.style.border = '';
           cardImg.classList.add('invalid-selection');
           console.log('flashing red border to show that this card cannot be selected');
         }
+        // Else there is no cards currently selected and it is a valid selection
+      } else {
+        selectedCardsArray.push(card);
       }
     } else {
       cardImg.classList.add('invalid-selection');
