@@ -64,7 +64,7 @@ const renderFaceUpCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   JSON.parse(selectedPlayerHandArray[0].faceUpCards).forEach((faceUpCard) => {
     const cardImg = document.createElement('img');
     cardImg.src = getCardPicUrl(faceUpCard);
-    cardImg.classList.add('cardPic');
+    cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
   });
 };
@@ -75,7 +75,7 @@ const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard) => {
     const cardImg = document.createElement('img');
     cardImg.src = getCardPicUrl(faceUpCard);
-    cardImg.classList.add('cardPic');
+    cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
   });
 };
@@ -92,7 +92,7 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
   cardsInHand.forEach((card) => {
     const cardPic = document.createElement('img');
     cardPic.src = getCardPicUrl(card);
-    cardPic.setAttribute('class', 'cardPic');
+    cardPic.setAttribute('class', 'card-pic');
 
     // Select & deselecting each card for the face up or down feature
     cardPic.addEventListener('click', () => {
@@ -164,9 +164,9 @@ const displayTableTopAndBtns = () => {
         }
       });
 
-      const currPlayerFaceUpDiv = document.querySelector('.currPlayerFaceUpCards');
-      const opponentFaceUpDiv = document.querySelector('.opponentFaceUpCards');
-      const privateHandDiv = document.querySelector('.privateHandCards');
+      const currPlayerFaceUpDiv = document.querySelector('.logged-in-player-face-up-cards ');
+      const opponentFaceUpDiv = document.querySelector('.opponent-face-up-cards');
+      const privateHandDiv = document.querySelector('.logged-in-player-private-hand');
       // Render logged-in player's face up cards
       renderFaceUpCards(currPlayerHands, currPlayerFaceUpDiv);
       // Render opponent player's face up cards

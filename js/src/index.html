@@ -21,16 +21,26 @@
       <div class="col d-flex flex-row justify-content-center">
         <div class="headerDiv"></div>
       </div>
-
+      <div class="container bg-secondary">
+        <div class="row">
+          <div
+            class="col table-top-cards d-flex flex-row justify-content-center"
+          >
+            <div class="opponent-private-hand">
+              <!-- Append each player's hand here -->
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="container table-top table-top-display">
-        <div class="opponentCards">
+        <div class="opponent-cards">
           <!-- Display Opponent's cards -->
           <div class="row">
             <div
               class="col table-top-cards d-flex flex-row justify-content-center"
               id="P1"
             >
-              <div class="opponentFaceUpCards">
+              <div class="opponent-face-up-cards">
                 <!-- Append the card pics here -->
               </div>
             </div>
@@ -41,38 +51,38 @@
               class="col table-top-cards d-flex flex-row justify-content-center"
               id="P2"
             >
-              <div class="opponentFaceDownCards">
-                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
-                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
-                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+              <div class="opponent-face-down-cards">
+                <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
+                <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
+                <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
               </div>
             </div>
           </div>
         </div>
-        <div class="remainingCards">
+        <div class="remaining-cards">
           <div class="row">
             <div
               class="col table-top-cards d-flex flex-row justify-content-center"
               id="P1"
             >
               <!-- Display DrawPile & DiscardPile cards -->
-              <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
-              <img class="cardPic" src="/cardPictures/HEART-1.png" />
+              <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
+              <img class="card-pic" src="/cardPictures/HEART-1.png" />
             </div>
           </div>
         </div>
-        <!-- Display current Player's cards -->
-        <div class="currPlayerCards">
+        <!-- Display logged-in Player's cards -->
+        <div class="logged-in-player-cards">
           <!-- Display face down cards -->
           <div class="row">
             <div
               class="col table-top-cards d-flex flex-row justify-content-center"
               id="P2"
             >
-              <div class="currPlayerFaceDownCards">
-                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
-                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
-                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+              <div class="logged-in-player-face-down-cards">
+                <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
+                <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
+                <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
               </div>
             </div>
           </div>
@@ -82,11 +92,11 @@
               class="col table-top-cards d-flex flex-row justify-content-center"
               id="P2"
             >
-              <div class="currPlayerFaceUpCards">
+              <div class="logged-in-player-face-up-cards">
                 <!-- Append the card pics here -->
-                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
-                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
-                <img class="cardPic" src="/cardPictures/COVER-CARD.png" />
+                <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
+                <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
+                <img class="card-pic" src="/cardPictures/COVER-CARD.png" />
               </div>
             </div>
           </div>
@@ -97,11 +107,8 @@
           <div
             class="col table-top-cards d-flex flex-row justify-content-center"
           >
-            <div class="privateHandCards">
+            <div class="logged-in-player-private-hand">
               <!-- Append each player's hand here -->
-              <!-- <img class="cardPic" src="/cardPictures/CLUB-1.png" />
-              <img class="cardPic" src="/cardPictures/CLUB-2.png" />
-              <img class="cardPic" src="/cardPictures/CLUB-3.png" /> -->
             </div>
           </div>
         </div>
