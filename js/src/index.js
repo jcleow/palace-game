@@ -79,7 +79,7 @@ axios.get('/games')
               // Display Start & Refresh Buttons
               gameInterface.removeChild(gameButtonsDiv);
               gameInterface.appendChild(createStartBtn());
-              gameInterface.appendChild(createRefreshBtn(currentGame));
+              gameInterface.appendChild(createRefreshBtn());
               return axios.get(`/games/${ongoingGame.id}`);
             })
             .then((selectedGameResponse) => {

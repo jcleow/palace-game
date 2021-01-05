@@ -27,7 +27,7 @@ export default function routes(app) {
         res.status(503).send('sorry an error has occurred');
       }
       req.middlewareLoggedIn = true;
-      req.loggedInUserId = req.cookies.loggedInUserId;
+      req.loggedInUserId = Number(req.cookies.loggedInUserId);
       next();
       return;
     }

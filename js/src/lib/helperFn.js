@@ -191,15 +191,20 @@ const displayTableTopAndBtns = () => {
       renderMiscCards(drawPileJSON, discardPileJSON, centerMiscCardsDiv);
 
       // If it is loggedInUser's turn surface the [Play] button
-      if (currGame.CurrentPlayerId === Number(loggedInUserId)) {
+      if (currGame.CurrentPlayerId == loggedInUserId) {
+        const playBtnContainer = document.querySelector('.play-button-container');
+        playBtnContainer.innerHTML = '';
+
         const playBtn = document.createElement('button');
+
         playBtn.innerText = 'Play Selected Cards';
-        document.body.appendChild(playBtn);
+        playBtnContainer.append(playBtn);
 
         playBtn.addEventListener('click', () => {
           axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`, selectedCardsPositionArray)
             .then((playCardsResponse) => {
-              console.log(playCardsResponse);
+              console.log(playCardsResponse, 'playCardsResponse');
+              currentGame = playCardsResponse.data.currGame;
             })
             .catch((error) => { console.log(error); });
         });

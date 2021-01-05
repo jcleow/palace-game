@@ -540,8 +540,7 @@ export default function games(db) {
     });
 
     // // Convert to number...
-    const currPlayerNum = currPlayerNumArray[0][currPlayerId.toString()];
-    console.log(currPlayerId.toString(), 'toString');
+    const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
     console.log(currPlayerNum, 'currPlayerNum');
 
     // Get Next Turn Num
@@ -549,21 +548,27 @@ export default function games(db) {
     let nextPlayerId;
     // if exceed num. of players means player 1 goes again
     if (currPlayerNum + 1 > playerSequence.length) {
-      nextPlayerNum = 1;
-      nextPlayerId = playerSequence[nextPlayerNum];
-      console.log('test-1');
+      nextPlayerNum = '1';
+      const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+      const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+      nextPlayerId = nextPlayerIdArray[0];
+      console.log(nextPlayerIdArray, 'array');
     } else {
-      nextPlayerNum = currPlayerNum + 1;
-      nextPlayerId = playerSequence[nextPlayerNum];
-      console.log('test-2');
+      nextPlayerNum = (currPlayerNum + 1).toString();
+      const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+      const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+      nextPlayerId = nextPlayerIdArray[0];
+      console.log(nextPlayerIdArray, 'array');
     }
-    console.log(nextPlayerNum, 'nextPlayerNum');
-    console.log(nextPlayerNum, 'nextPlayerId');
+    console.log(nextPlayerId, 'nextPlayerId');
     // Change Player Turn
     currGame.CurrentPlayerId = nextPlayerId;
     await currGame.save();
 
-    res.send('update completed');
+    // Get next player's username
+    const currPlayer = db.User.findByPk(nextPlayerId);
+
+    res.send({ currGame, currPlayer, message: 'update completed' });
   };
 
   // return all functions we define in an object
