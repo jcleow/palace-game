@@ -166,16 +166,17 @@ export default function games(db) {
       await game.save();
 
       // Get all the user ids
-      const currUserGameRound = await db.GamesUser.findAll({
+      const currUsersGameRoundArray = await db.GamesUser.findAll({
         where: {
           GameId: game.id,
         },
       });
-      console.log(currUserGameRound, 'playerUserIdArray');
+      console.log(currUsersGameRoundArray, 'playerUserIdArray');
       // Randomly assign playerNum to each UserId in the game
+      // We store these values in an array first
       const randomPlayerNumArray = [];
-      while (randomPlayerNumArray.length < currUserGameRound.length) {
-        const generatedNum = Math.floor(Math.random() * currUserGameRound.length) + 1;
+      while (randomPlayerNumArray.length < currUsersGameRoundArray.length) {
+        const generatedNum = Math.floor(Math.random() * currUsersGameRoundArray.length) + 1;
         let isGeneratedNumUnique = true;
         randomPlayerNumArray.forEach((randPlayerNum) => {
           if (randPlayerNum === generatedNum) {
@@ -186,19 +187,25 @@ export default function games(db) {
           randomPlayerNumArray.push(generatedNum);
         }
       }
-      // Update each User's playerNum
-      currUserGameRound.forEach(async (playerUserId, index) => {
-        await db.GamesUser.update(
-          { playerNum: randomPlayerNumArray[index] },
-          {
-            where:
-            {
-              UserId: playerUserId.UserId,
-              GameId: game.id,
-            },
-          },
-        );
+      // Create a JSON that stores all the player sequences for the game
+      const playerSequence = {};
+
+      //
+      randomPlayerNumArray.forEach(async (randNum, index) => {
+        const playerTurn = index + 1;
+        playerSequence[playerTurn] = currUsersGameRoundArray[index].UserId;
+        currUsersGameRoundArray[index].playerNum = randNum;
+        await currUsersGameRoundArray[index].save();
       });
+
+      // Update playerSequence
+      (async () => {
+        console.log(playerSequence, 'playerSequence');
+        game.playerSequence = JSON.stringify(playerSequence);
+        game.changed('playerSequence', true);
+        await game.save();
+        console.log('game saved');
+      })();
 
       // Draw 3 face down cards into each of the player's faceDown col
       const playerFaceDownCards = [[], []];
@@ -206,12 +213,12 @@ export default function games(db) {
         for (let i = 0; i < 3; i += 1) {
           faceDownHand.push(game.drawPile.deck.pop());
         }
-        currUserGameRound[index].faceDownCards = JSON.stringify(faceDownHand);
-        currUserGameRound[index].changed('faceDownCards', true);
+        currUsersGameRoundArray[index].faceDownCards = JSON.stringify(faceDownHand);
+        currUsersGameRoundArray[index].changed('faceDownCards', true);
 
-        currUserGameRound[index].drawPile = JSON.stringify(game.drawPile.deck);
-        currUserGameRound[index].changed('drawPile', true);
-        await currUserGameRound[index].save();
+        currUsersGameRoundArray[index].drawPile = JSON.stringify(game.drawPile.deck);
+        currUsersGameRoundArray[index].changed('drawPile', true);
+        await currUsersGameRoundArray[index].save();
       });
 
       // Draw 6 cards into each of the player's currentHands
@@ -220,9 +227,9 @@ export default function games(db) {
         for (let i = 0; i < 6; i += 1) {
           hand.push(game.drawPile.deck.pop());
         }
-        currUserGameRound[index].cardsInHand = JSON.stringify(hand);
-        currUserGameRound[index].changed('cardsInHand', true);
-        await currUserGameRound[index].save();
+        currUsersGameRoundArray[index].cardsInHand = JSON.stringify(hand);
+        currUsersGameRoundArray[index].changed('cardsInHand', true);
+        await currUsersGameRoundArray[index].save();
       });
 
       // Update the state of the drawPile after distributing the cards
@@ -252,7 +259,6 @@ export default function games(db) {
       response.send({
         id: game.id,
         gameStatus: game.status,
-        playerHands,
       });
     } catch (error) {
       response.status(500).send(error);
@@ -467,12 +473,6 @@ export default function games(db) {
         UserId: req.params.playerId,
       },
     });
-    // const currUserGameRound = await db.GamesUser.findOne({
-    //   where: {
-    //     GameId: req.params.gameId,
-    //     UserId: req.params.playerId,
-    //   },
-    // });
 
     // Get Discarded Pile
     let discardedPile = getDiscardedPile(currGame);

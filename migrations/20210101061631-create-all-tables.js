@@ -39,6 +39,9 @@ module.exports = {
       drawPile: {
         type: Sequelize.JSON,
       },
+      playerSequence: {
+        type: Sequelize.JSON,
+      },
       WinnerId: {
         type: Sequelize.INTEGER,
         references: {

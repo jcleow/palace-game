@@ -13,6 +13,9 @@ export default function gameModel(sequelize, DataTypes) {
     drawPile: {
       type: DataTypes.JSON,
     },
+    playerSequence: {
+      type: DataTypes.JSON,
+    },
     WinnerId: {
       type: DataTypes.INTEGER,
       references: {
@@ -28,7 +31,7 @@ export default function gameModel(sequelize, DataTypes) {
       },
     },
     gameState: {
-      type: DataTypes.ENUM('start', 'closed', 'finished'),
+      type: DataTypes.ENUM('waiting', 'setGame', 'begin', 'ongoing', 'finished'),
     },
     createdAt: {
       allowNull: false,
