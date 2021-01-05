@@ -209,7 +209,7 @@ export default function games(db) {
         currUserGameRound[index].faceDownCards = JSON.stringify(faceDownHand);
         currUserGameRound[index].changed('faceDownCards', true);
 
-        currUserGameRound[index].drawPile = JSON.stringify(drawPile);
+        currUserGameRound[index].drawPile = JSON.stringify(game.drawPile.deck);
         currUserGameRound[index].changed('drawPile', true);
         await currUserGameRound[index].save();
       });
