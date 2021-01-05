@@ -272,18 +272,48 @@ export default function games(db) {
       res.redirect(`/games/${req.params.gameId}/players/${req.loggedInUserId}`);
     } else if (currGame.gameState === 'begin') {
       // Find player's userid where playerNum is 1...
-      const currPlayer = await db.User.findOne({
-        include: {
-          model: db.GamesUser,
-          where: {
-            playerNum: 1,
-            GameId: currGame.id,
-          },
+
+      // Get current player's
+
+      // If the game has just begun - initialize with player 1
+
+      // const currPlayer = await db.User.findOne({
+      //   include: {
+      //     model: db.GamesUser,
+      //     where: {
+      //       playerNum: 1,
+      //       GameId: currGame.id,
+      //     },
+      //   },
+      // });
+
+      // Else find the user with the next player id
+      let currPlayer;
+      const currPlayerArray = await currGame.getUsers({
+        where: {
+          id: currGame.CurrentPlayerId,
         },
       });
 
+      // If game has been initialized, an associated currPlayer would be retrievable
+      if (currPlayerArray.length > 0) {
+        currPlayer = currPlayerArray[0];
+        // Otherwise if game has not yet been initialized
+        // We have to search the Users table through
+      } else {
+        currPlayer = await db.User.findOne({
+          include: {
+            model: db.GamesUser,
+            where: {
+              playerNum: 1,
+              GameId: currGame.id,
+            },
+          },
+        });
+      }
+
       // Add playerOne's Id into target table (Games)
-      await currPlayer.addCurrentPlayerTurn(currGame);
+      await currPlayer.addCurrentPlayerTurns(currGame);
       res.send({ currGameRoundDetails, currGame, currPlayer });
     }
   };
@@ -415,143 +445,155 @@ export default function games(db) {
   };
 
   const play = async (req, res) => {
-    const currGame = await db.Game.findByPk(req.params.gameId);
-    // This refers to the positions of the cards
-    // that were selected for play, stored in an array
+    try {
+      const currGame = await db.Game.findByPk(req.params.gameId);
+      // This refers to the positions of the cards
+      // that were selected for play, stored in an array
 
-    const positionOfCardsPlayedArray = req.body;
+      const positionOfCardsPlayedArray = req.body;
 
-    const currUserGameRound = await currGame.getGamesUsers({
-      where: {
-        UserId: req.params.playerId,
-      },
-    });
+      const currUserGameRound = await currGame.getGamesUsers({
+        where: {
+          UserId: req.params.playerId,
+        },
+      });
 
-    // Get Discarded Pile
-    let discardPile = getDiscardedPile(currGame);
-    const topDiscardedCard = discardPile[discardPile.length - 1];
+      // Get Discarded Pile
+      let discardPile = getDiscardedPile(currGame);
+      const topDiscardedCard = discardPile[discardPile.length - 1];
 
-    // Get the Draw Pile
-    const drawPile = JSON.parse(currGame.drawPile);
+      // Get the Draw Pile
+      const drawPile = JSON.parse(currGame.drawPile);
 
-    // Get the cardsInHand
-    let cardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
+      // Get the cardsInHand
+      let cardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
 
-    // If move is illegal, retrieve all cards from discardPile into Hand
-    if (positionOfCardsPlayedArray.length === 0) {
-      cardsInHand = [...cardsInHand, ...discardPile];
-      // empty discard pile and no need to draw new cards
-      discardPile = null;
-    }
-    // Else if card(s) are submitted
-    else {
+      // If move is illegal, retrieve all cards from discardPile into Hand
+      if (positionOfCardsPlayedArray.length === 0) {
+        cardsInHand = [...cardsInHand, ...discardPile];
+        // empty discard pile and no need to draw new cards
+        discardPile = null;
+      }
+      // Else if card(s) are submitted
+      else {
       // Perform check to see if the move is legal
-    // Test-1: First check how many cards are selected
-      if (positionOfCardsPlayedArray.length > 1) {
-      // Check if all the cards have the same rank
-        let areCardsTheSame = true;
+        // Test-1: First check how many cards are selected
+        if (positionOfCardsPlayedArray.length > 1) {
+          // Check if all the cards have the same rank
+          let areCardsTheSame = true;
 
-        // positionOfCardPlayed is zero indexed
-        positionOfCardsPlayedArray.forEach((positionOfCardPlayed, indexOfCardPosition) => {
+          // positionOfCardPlayed is zero indexed
+          positionOfCardsPlayedArray.forEach((positionOfCardPlayed, indexOfCardPosition) => {
           // Check if current card(indexed) is the same as the previous selected card
           // in the position array
           // E.g index 1 and 2 of the cardInHand are selected, we compare
           // card at index 2 against card against index 1
-          if (indexOfCardPosition + 1 <= positionOfCardsPlayedArray.length - 1) {
-            console.log('card1', cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition]]);
-            console.log('card2', cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition + 1]]);
-            if ((cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition]].rank)
+            if (indexOfCardPosition + 1 <= positionOfCardsPlayedArray.length - 1) {
+              console.log('card1', cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition]]);
+              console.log('card2', cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition + 1]]);
+              if ((cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition]].rank)
               !== (cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition + 1]].rank)
-            ) {
-              areCardsTheSame = false;
+              ) {
+                areCardsTheSame = false;
+              }
             }
+          });
+          if (!areCardsTheSame) {
+            console.log('cards are not the same');
+            return;
           }
-        });
-        if (!areCardsTheSame) {
-          console.log('cards are not the same');
+        }
+        // Test-2: Check if (first) card is greater than that of discardPile's top card
+        if (cardsInHand[positionOfCardsPlayedArray[0]].rank < topDiscardedCard.rank) {
+          console.log('selected card(s) is not larger discarded card');
           return;
         }
-      }
-      // Test-2: Check if (first) card is greater than that of discardPile's top card
-      if (cardsInHand[positionOfCardsPlayedArray[0]].rank < topDiscardedCard.rank) {
-        console.log('selected card(s) is not larger discarded card');
-        return;
-      }
 
-      // If it passes test 1 and 2, means the selected cards can be pushed into the discardPile
-      console.log(discardPile, 'oldvalue Of discard pile');
-      positionOfCardsPlayedArray.forEach((position) => {
-        discardPile.push(cardsInHand[position]);
-      });
+        // If it passes test 1 and 2, means the selected cards can be pushed into the discardPile
 
-      console.log(discardPile, 'newValue of discardPile');
-      console.log(cardsInHand, 'cardsInHand');
-      console.log(positionOfCardsPlayedArray, 'position of cardsToBePlayed');
-      // Remove the played cards from the hand
-      positionOfCardsPlayedArray.forEach((positionOfCardPlayed) => {
-        cardsInHand.splice(positionOfCardPlayed, 1);
-      });
+        positionOfCardsPlayedArray.forEach((position) => {
+          discardPile.push(cardsInHand[position]);
+        });
+        // Remove the played cards from the hand
+        positionOfCardsPlayedArray.forEach((positionOfCardPlayed) => {
+          cardsInHand.splice(positionOfCardPlayed, 1);
+        });
 
-      // Draw cards until there are 3 cards in hand
-      const numOfCardsInHand = cardsInHand.length;
-      if (numOfCardsInHand < 3) {
-        for (let i = 0; i < (3 - numOfCardsInHand); i += 1) {
-          cardsInHand.push(drawPile.pop());
+        // Draw cards until there are 3 cards in hand
+        const numOfCardsInHand = cardsInHand.length;
+        if (numOfCardsInHand < 3) {
+          for (let i = 0; i < (3 - numOfCardsInHand); i += 1) {
+            cardsInHand.push(drawPile.pop());
+          }
         }
       }
+      // Update the state in selectedGameRound and currGame card JSONs in DB
+      currGame.discardPile = JSON.stringify(discardPile);
+      currGame.changed('discardPile', true);
+      // await currGame.save();
+
+      currGame.drawPile = JSON.stringify(drawPile);
+      currGame.changed('drawPile', true);
+      await currGame.save();
+
+      currUserGameRound[0].cardsInHand = JSON.stringify(cardsInHand);
+      currUserGameRound[0].changed('cardsInHand', true);
+
+      await currUserGameRound[0].save();
+
+      // *********** Player Turn has Ended - Switch Player Turn ************//
+
+      // Get Current Player ID
+      const currPlayerId = currGame.CurrentPlayerId;
+
+      // Get All player sequences
+      const playerSequence = JSON.parse(currGame.playerSequence);
+
+      // Get Current Turn Num
+      const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
+
+      // // Convert to number...
+      const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
+      console.log(currPlayerNum, 'currPlayerNum');
+
+      // Get Next Turn Num
+      let nextPlayerNum;
+      let nextPlayerId;
+      // if exceed num. of players means player 1 goes again
+      if (currPlayerNum + 1 > playerSequence.length) {
+        nextPlayerNum = '1';
+        const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+        const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+        nextPlayerId = nextPlayerIdArray[0];
+      } else {
+        nextPlayerNum = (currPlayerNum + 1).toString();
+        const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+        const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+        nextPlayerId = nextPlayerIdArray[0];
+      }
+      console.log(nextPlayerNum, 'nextPlayerNum -string');
+      console.log(nextPlayerId, 'nextPlayerId-integer');
+
+      // Get next player instance and send the response
+      const currPlayer = await db.User.findByPk(nextPlayerId);
+
+      // // Change Player Turn by using associative method
+      // await currPlayer.addCurrentPlayerTurns(currGame);
+
+      currGame.CurrentPlayerId = nextPlayerId;
+      currGame.save();
+
+      // await db.Game.update({ CurrentPlayerId: nextPlayerId },
+      //   {
+      //     where: {
+      //       id: currGame.id,
+      //     },
+      //   });
+
+      res.send({ currGame, currPlayer, message: 'update completed' });
+    } catch (error) {
+      console.log(error);
     }
-    // Update the state in selectedGameRound and currGame card JSONs in DB
-    currGame.discardPile = JSON.stringify(discardPile);
-    currGame.changed('discardPile', true);
-    // await currGame.save();
-
-    currGame.drawPile = JSON.stringify(drawPile);
-    currGame.changed('drawPile', true);
-    await currGame.save();
-
-    currUserGameRound[0].cardsInHand = JSON.stringify(cardsInHand);
-    currUserGameRound[0].changed('cardsInHand', true);
-
-    await currUserGameRound[0].save();
-
-    // *********** Player Turn has Ended - Switch Player Turn ************//
-
-    // Get Current Player ID
-    const currPlayerId = currGame.CurrentPlayerId;
-
-    // Get All player sequences
-    const playerSequence = JSON.parse(currGame.playerSequence);
-
-    // Get Current Turn Num
-    const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
-
-    // // Convert to number...
-    const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
-
-    // Get Next Turn Num
-    let nextPlayerNum;
-    let nextPlayerId;
-    // if exceed num. of players means player 1 goes again
-    if (currPlayerNum + 1 > playerSequence.length) {
-      nextPlayerNum = '1';
-      const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-      const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-      nextPlayerId = nextPlayerIdArray[0];
-    } else {
-      nextPlayerNum = (currPlayerNum + 1).toString();
-      const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-      const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-      nextPlayerId = nextPlayerIdArray[0];
-    }
-
-    // Change Player Turn
-    currGame.CurrentPlayerId = nextPlayerId;
-    await currGame.save();
-
-    // Get next player's username
-    const currPlayer = db.User.findByPk(nextPlayerId);
-
-    res.send({ currGame, currPlayer, message: 'update completed' });
   };
 
   // return all functions we define in an object

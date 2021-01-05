@@ -158,7 +158,7 @@ const displayTableTopAndBtns = () => {
       // Get the most recently discarded card
       const discardPile = JSON.parse(discardPileJSON);
       let topDiscardedCard;
-      if (discardPile !== 'null') {
+      if (discardPile !== null) {
         topDiscardedCard = discardPile.pop();
       }
 
@@ -193,9 +193,11 @@ const displayTableTopAndBtns = () => {
       renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv);
       // Render draw pile and discard pile
       renderMiscCards(drawPileJSON, discardPileJSON, centerMiscCardsDiv);
-
+      console.log(loggedInUserId, 'loggedInUserId');
+      console.log(currGame.CurrentPlayerId, 'currPlayerId');
       // If it is loggedInUser's turn surface the [Play] button
-      if (currGame.CurrentPlayerId == loggedInUserId) {
+      if (currGame.CurrentPlayerId === loggedInUserId) {
+        console.log('reached here');
         const playBtnContainer = document.querySelector('.play-button-container');
         playBtnContainer.innerHTML = '';
 
@@ -373,7 +375,7 @@ const setGame = () => {
   axios.put(`/games/${currentGame.id}/setGame`)
     .then((response) => {
       currentGame = response.data;
-      loggedInUserId = response.data.loggedInUserId;
+      loggedInUserId = Number(response.data.loggedInUserId);
       // remove start game button
       const startGameBtn = document.querySelector('#start-btn');
       const gameInterface = document.querySelector('#game-interface');
