@@ -462,13 +462,17 @@ export default function games(db) {
     const positionOfCardsPlayedArray = req.body;
     console.log(positionOfCardsPlayedArray, 'position of cards to be played');
 
-    // currGame.getGamesUsers({where:...})
-    const selectedGameRound = await db.GamesUser.findOne({
+    const currUserGameRound = await currGame.getGamesUsers({
       where: {
-        GameId: req.params.gameId,
         UserId: req.params.playerId,
       },
     });
+    // const currUserGameRound = await db.GamesUser.findOne({
+    //   where: {
+    //     GameId: req.params.gameId,
+    //     UserId: req.params.playerId,
+    //   },
+    // });
 
     // Get Discarded Pile
     let discardedPile = getDiscardedPile(currGame);
@@ -480,7 +484,7 @@ export default function games(db) {
     const drawPile = JSON.parse(currGame.drawPile);
 
     // Get the cardsInHand
-    let cardsInHand = JSON.parse(selectedGameRound.cardsInHand);
+    let cardsInHand = JSON.parse(currUserGameRound.cardsInHand);
     console.log(positionOfCardsPlayedArray, 'arrayPositionOfCardsTobePlayed');
     // If move is illegal, retrieve all cards from discardPile into Hand
     if (positionOfCardsPlayedArray.length === 0) {
@@ -553,17 +557,17 @@ export default function games(db) {
     currGame.drawPile = JSON.stringify(drawPile);
     currGame.changed('drawPile', true);
 
-    selectedGameRound.cardsInHand = JSON.stringify(cardsInHand);
-    selectedGameRound.changed('cardsInHand', true);
+    currUserGameRound.cardsInHand = JSON.stringify(cardsInHand);
+    currUserGameRound.changed('cardsInHand', true);
 
     await currGame.save();
-    await selectedGameRound.save();
+    await currUserGameRound.save();
 
     console.log(currGame.discardedPile, 'updated discardedPile');
     // console.log(currGame.drawPile, 'updated drawPile');
-    console.log(selectedGameRound.cardsInHand, 'updated cardsInHand');
+    console.log(currUserGameRound.cardsInHand, 'updated cardsInHand');
 
-    //* ** Player Turn has Ended ***//
+    //* ** Player Turn has Ended - Switch Player Turn***//
 
     // Change Player Turn
     res.send('update completed');
