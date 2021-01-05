@@ -200,11 +200,9 @@ export default function games(db) {
 
       // Update playerSequence
       (async () => {
-        console.log(playerSequence, 'playerSequence');
         game.playerSequence = JSON.stringify(playerSequence);
         game.changed('playerSequence', true);
         await game.save();
-        console.log('game saved');
       })();
 
       // Draw 3 face down cards into each of the player's faceDown col
