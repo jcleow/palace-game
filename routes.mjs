@@ -43,8 +43,9 @@ export default function routes(app) {
   app.get('/games', GamesController.index);
   // get selected game
   app.get('/games/:gameId', GamesController.show);
-  // get selected game score
-  app.get('/games/:id/score', GamesController.score);
+
+  // // get selected game score
+  // app.get('/games/:id/score', GamesController.score);
 
   // get selected player's first 6 cards
   app.get('/games/:gameId/players/:playerId', GamesController.displayHand);
@@ -59,8 +60,8 @@ export default function routes(app) {
   app.post('/games', GamesController.create);
   // Starts the game by deciding a random player to begin first followed by dealing 6 cards
   app.put('/games/:id/setGame', GamesController.setGame);
-  // update a game with new cards
-  app.put('/games/:id/deal', GamesController.deal);
+  // // update a game with new cards
+  // app.put('/games/:id/deal', GamesController.deal);
   // To insert into GamesUsers table when another player joins the game
   app.post('/games/:gameId/join/:playerId', GamesController.join);
 

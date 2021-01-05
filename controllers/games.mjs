@@ -110,9 +110,12 @@ const makeDeck = function () {
  */
 
 export default function games(db) {
-  // render the main page
-  const displayMainPage = (request, response) => {
-    response.render('games/index');
+// **************** Helper Functions for routers ****************
+// To get the discarded card pile as an object
+  const getDiscardedPile = (currGame) => {
+    const discardPileJSON = currGame.discardPile;
+    const discardedPile = JSON.parse(discardPileJSON);
+    return discardedPile;
   };
 
   // create a new game. Insert a new row in the DB.
@@ -171,7 +174,7 @@ export default function games(db) {
           GameId: game.id,
         },
       });
-      console.log(currUsersGameRoundArray, 'playerUserIdArray');
+
       // Randomly assign playerNum to each UserId in the game
       // We store these values in an array first
       const randomPlayerNumArray = [];
@@ -245,24 +248,6 @@ export default function games(db) {
     }
   };
 
-  // deal two new cards from the deck.
-  const deal = async (request, response) => {
-    try {
-      // get the game by the ID passed in the request
-      const game = await db.Game.findByPk(request.params.id);
-      // make changes to the object
-
-      // send the updated game back to the user.
-      // dont include the deck so the user can't cheat
-      response.send({
-        id: game.id,
-        gameStatus: game.status,
-      });
-    } catch (error) {
-      response.status(500).send(error);
-    }
-  };
-
   // For either user to refresh the game... show the faceup cards (and the discard pile)
   const show = async (req, res) => {
     // First, check the state of the game...
@@ -316,24 +301,6 @@ export default function games(db) {
       }
     }
     res.send('no ongoing games/must be loggedin');
-  };
-
-  // Get the existing score of P1 and P2
-  const score = async (req, res) => {
-    const player1Score = await db.GamesUser.findOne({
-      where: {
-        GameId: req.params.id,
-        player_num: 1,
-      },
-    });
-
-    const player2Score = await db.GamesUser.findOne({
-      where: {
-        GameId: req.params.id,
-        player_num: 2,
-      },
-    });
-    res.send({ player1Score, player2Score });
   };
 
   const displayHand = async (req, res) => {
@@ -415,11 +382,6 @@ export default function games(db) {
     res.send({ setGame: 'in-process', message: 'Update operation complete' });
   };
 
-  // Update draw and discard pile
-  const updatePile = () => {
-
-  };
-
   // Inserts a new entry into GamesUser table when a new user joins
   const join = async (req, res) => {
     // First, find if the user has joined this room before
@@ -433,8 +395,8 @@ export default function games(db) {
     // Retrieve the currentGame instance to be sent back to browser
     // cannot use associative method because upon the first joining, the non-creator
     // player has not been created yet
+
     const currentGame = await db.Game.findByPk(req.params.gameId);
-    console.log(currentGame, 'currentGame-23');
 
     if (!currentPlayerEntry) {
     // If user has never joined the game before create a new entry for player
@@ -450,14 +412,6 @@ export default function games(db) {
     res.send({ currentGame, message: 'user has joined the game before' });
   };
 
-  // Helper to get the discarded card pile as an object
-  const getDiscardedPile = (currGame) => {
-    const discardPileJSON = currGame.discardPile;
-    const discardedPile = JSON.parse(discardPileJSON);
-    console.log(discardedPile, 'discardedPile');
-    return discardedPile;
-  };
-
   const play = async (req, res) => {
     const currGame = await db.Game.findByPk(req.params.gameId);
     // This refers to the positions of the cards
@@ -471,6 +425,7 @@ export default function games(db) {
         UserId: req.params.playerId,
       },
     });
+    console.log(currUserGameRound, 'currUserGameRound');
 
     // Get Discarded Pile
     let discardedPile = getDiscardedPile(currGame);
@@ -482,7 +437,8 @@ export default function games(db) {
     const drawPile = JSON.parse(currGame.drawPile);
 
     // Get the cardsInHand
-    let cardsInHand = JSON.parse(currUserGameRound.cardsInHand);
+    console.log(currUserGameRound[0].cardsInHand, 'cardsInHand');
+    let cardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
     console.log(positionOfCardsPlayedArray, 'arrayPositionOfCardsTobePlayed');
     // If move is illegal, retrieve all cards from discardPile into Hand
     if (positionOfCardsPlayedArray.length === 0) {
@@ -555,15 +511,15 @@ export default function games(db) {
     currGame.drawPile = JSON.stringify(drawPile);
     currGame.changed('drawPile', true);
 
-    currUserGameRound.cardsInHand = JSON.stringify(cardsInHand);
-    currUserGameRound.changed('cardsInHand', true);
+    currUserGameRound[0].cardsInHand = JSON.stringify(cardsInHand);
+    currUserGameRound[0].changed('cardsInHand', true);
 
     await currGame.save();
-    await currUserGameRound.save();
+    await currUserGameRound[0].save();
 
     console.log(currGame.discardedPile, 'updated discardedPile');
     // console.log(currGame.drawPile, 'updated drawPile');
-    console.log(currUserGameRound.cardsInHand, 'updated cardsInHand');
+    console.log(currUserGameRound[0].cardsInHand, 'updated cardsInHand');
 
     //* ** Player Turn has Ended - Switch Player Turn***//
 
@@ -574,16 +530,12 @@ export default function games(db) {
   // return all functions we define in an object
   // refer to the routes file above to see this used
   return {
-    displayMainPage,
-    deal,
     create,
     index,
     show,
     setGame,
     displayHand,
     updateHand,
-    updatePile,
-    score,
     join,
     play,
   };
