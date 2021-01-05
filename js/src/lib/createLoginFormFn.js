@@ -1,4 +1,7 @@
-const createLoginForm = (loginContainer) => {
+import axios from 'axios';
+import createUserIdAndLogOutBtnDisplay from './helperFn.js';
+// createLoginForm function
+export default (loginContainer) => {
   const loginFormDiv = document.createElement('div');
 
   const usernameLabel = document.createElement('label');
