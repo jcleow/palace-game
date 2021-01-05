@@ -1,4 +1,5 @@
 import axios from 'axios';
+import './styles.scss';
 
 import {
   createStartBtn, createRefreshBtn, createUserIdLabelAndLogOutBtnDisplay, updateUsersJoinedDiv,

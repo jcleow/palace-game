@@ -1,3 +1,57 @@
-body {
-  background-color: pink;
+/** @format */
+
+.card-pic {
+  width: 100px;
+  height: auto;
+  border: solid 1px grey;
+  border-radius: 10px;
+  margin: 5px;
+  background-color: white;
+}
+.center-misc-cards {
+  margin-top: 22vh;
+  margin-bottom: 5vh;
+}
+.opponent-face-up-cards {
+  position: absolute;
+  top: 30px;
+  z-index: 1;
+}
+
+.opponent-face-down-cards {
+  position: absolute;
+  z-index: 0;
+}
+
+.logged-in-player-face-up-cards {
+  position: absolute;
+  z-index: 3;
+}
+.logged-in-player-face-down-cards {
+  position: absolute;
+  top: 30px;
+  z-index: 2;
+}
+
+.table-top {
+  position: relative;
+  min-height: 637px;
+  background-color: lightblue;
+  border-radius: 5px;
+}
+.table-top-display {
+  display: none;
+}
+
+.invalid-selection {
+  border: 5px #ff0000 solid;
+
+  animation: blink 0.5s;
+  animation-iteration-count: 3;
+}
+
+@keyframes blink {
+  50% {
+    border-color: #fff;
+  }
 }
