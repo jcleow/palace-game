@@ -1,6 +1,7 @@
 import axios from 'axios';
 import './styles.scss';
 
+// Import Helper Functions
 import {
   createStartBtn, createRefreshBtn, createUserIdLabelAndLogOutBtnDisplay, updateUsersJoinedDiv,
 } from './lib/helperFn.js';

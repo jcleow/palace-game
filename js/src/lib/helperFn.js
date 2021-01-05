@@ -83,18 +83,21 @@ const renderFaceDownCards = (selectedPlayerHandArray, selectedDivToAppendTo) => 
   });
 };
 
-const renderCardsInHand = (selectedPlayerHandArray, selectedDivToAppendTo,
-  selectedCardsArray, topDiscardedCard) => {
+const renderCardsInHand = (selectedCardsPositionArray, selectedPlayerHandArray,
+  selectedDivToAppendTo, selectedCardsArray, topDiscardedCard) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
-  JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard) => {
+  JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard, index) => {
     const cardImg = document.createElement('img');
     cardImg.src = getCardPicUrl(faceUpCard);
     cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
 
+    const cardIndex = index;
+
     cardImg.addEventListener('click', () => {
-      selectCardsToPlay(selectedCardsArray, cardImg, faceUpCard, topDiscardedCard);
+      //
+      selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, faceUpCard, topDiscardedCard);
     });
   });
 };
@@ -137,6 +140,7 @@ const displayTableTopAndBtns = () => {
   // get all the faceUpCards from database and create it here
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
+      // someFunction(response);
       // Classify the response data round details into
       // either logged-in player array or opponent hand array
       const loggedInPlayerHands = [];
@@ -174,9 +178,13 @@ const displayTableTopAndBtns = () => {
 
       // Keep track of selected cards for play
       const selectedCardsArray = [];
+      // Keep track of the selected cards indices to play
+      const selectedCardsPositionArray = [];
+
       // Render logged-in player's private hand complete with client-side validation
       // of cards to play
-      renderCardsInHand(loggedInPlayerHands, privateHandDiv, selectedCardsArray, topDiscardedCard);
+      renderCardsInHand(selectedCardsPositionArray, loggedInPlayerHands,
+        privateHandDiv, selectedCardsArray, topDiscardedCard);
       // Render logged-in player's face down cards
       renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv);
       // Render draw pile and discard pile
@@ -189,7 +197,7 @@ const displayTableTopAndBtns = () => {
         document.body.appendChild(playBtn);
 
         playBtn.addEventListener('click', () => {
-          axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`)
+          axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`, selectedCardsPositionArray)
             .then((playCardsResponse) => {
               console.log(playCardsResponse);
             })
@@ -266,10 +274,10 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
 };
 
 /**
- *
- * @param {Array} selectedCardsArray
+ * @param {Array} selectedCardsPositionArray
  * An array that the parent function holds to keep
- * track of the number of selected cards
+ * track of the number of selected cards through their indices
+ *
  * @param {DOMObject} cardImg
  *
  * @param {Object} card
@@ -279,43 +287,46 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
  * anyone time
  *
  */
-const selectCardsToPlay = (selectedCardsArray, cardImg, card, topDiscardedCard) => {
+const selectCardsToPlay = (selectedCardsPositionArray, selectedCardsArray, cardIndex,
+  cardImg, card, topDiscardedCard) => {
   // Need to remove flashing red border if say a user decides to pick another higher value card
   // instead of the first higher value card previously chosen
   if (cardImg.classList.contains('invalid-selection')) {
-    console.log(cardImg.classList.contains('invalid-selection'), 'contains red flashy border?');
     cardImg.classList.remove('invalid-selection');
   }
-
   // If selecting a previously unselected card...
   if (!cardImg.style.border) {
     // Check if current card selected has a higher or same rank as discardPileCard
     if (card.rank >= topDiscardedCard.rank) {
       cardImg.style.border = 'thick solid #0000FF';
       // Next, check if another card has already been selected...
-      if (selectedCardsArray.length > 0) {
-        // Next check if this card selected has the same rank as the other selected card
+      if (selectedCardsPositionArray.length > 0) {
+        // Next check if this card selected has the same rank as the first
+        // (otherwise all other) selected cards
         // If the 2 cards have the same rank means they are the same card...
         if (selectedCardsArray[0].rank === card.rank) {
           selectedCardsArray.push(card);
+          selectedCardsPositionArray.push(cardIndex);
           // Otherwise this is an invalid selection
         } else {
           cardImg.style.border = '';
           cardImg.classList.add('invalid-selection');
-          console.log('flashing red border to show that this card cannot be selected');
         }
         // Else there is no cards currently selected and it is a valid selection
       } else {
         selectedCardsArray.push(card);
+        selectedCardsPositionArray.push(cardIndex);
       }
+      // If current card selected has a lower rank than discardPileCard
     } else {
       cardImg.classList.add('invalid-selection');
-      console.log('flashing red border to show that this card cannot be selected');
     }
+  // Otherwise selecting a previously selected card
   } else {
     cardImg.style.border = '';
     // Remove selected card from its position
     selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
+    selectedCardsPositionArray.splice(selectedCardsPositionArray.indexOf(cardIndex), 1);
   }
 };
 

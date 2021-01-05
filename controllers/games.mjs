@@ -166,16 +166,16 @@ export default function games(db) {
       await game.save();
 
       // Get all the user ids
-      const playerUserIdArray = await db.GamesUser.findAll({
+      const currUserGameRound = await db.GamesUser.findAll({
         where: {
           GameId: game.id,
         },
       });
-      console.log(playerUserIdArray, 'playerUserIdArray');
+      console.log(currUserGameRound, 'playerUserIdArray');
       // Randomly assign playerNum to each UserId in the game
       const randomPlayerNumArray = [];
-      while (randomPlayerNumArray.length < playerUserIdArray.length) {
-        const generatedNum = Math.floor(Math.random() * playerUserIdArray.length) + 1;
+      while (randomPlayerNumArray.length < currUserGameRound.length) {
+        const generatedNum = Math.floor(Math.random() * currUserGameRound.length) + 1;
         let isGeneratedNumUnique = true;
         randomPlayerNumArray.forEach((randPlayerNum) => {
           if (randPlayerNum === generatedNum) {
@@ -187,7 +187,7 @@ export default function games(db) {
         }
       }
       // Update each User's playerNum
-      playerUserIdArray.forEach(async (playerUserId, index) => {
+      currUserGameRound.forEach(async (playerUserId, index) => {
         await db.GamesUser.update(
           { playerNum: randomPlayerNumArray[index] },
           {
@@ -206,9 +206,12 @@ export default function games(db) {
         for (let i = 0; i < 3; i += 1) {
           faceDownHand.push(game.drawPile.deck.pop());
         }
-        playerUserIdArray[index].faceDownCards = JSON.stringify(faceDownHand);
-        playerUserIdArray[index].changed('faceDownCards', true);
-        await playerUserIdArray[index].save();
+        currUserGameRound[index].faceDownCards = JSON.stringify(faceDownHand);
+        currUserGameRound[index].changed('faceDownCards', true);
+
+        currUserGameRound[index].drawPile = JSON.stringify(drawPile);
+        currUserGameRound[index].changed('drawPile', true);
+        await currUserGameRound[index].save();
       });
 
       // Draw 6 cards into each of the player's currentHands
@@ -217,9 +220,9 @@ export default function games(db) {
         for (let i = 0; i < 6; i += 1) {
           hand.push(game.drawPile.deck.pop());
         }
-        playerUserIdArray[index].cardsInHand = JSON.stringify(hand);
-        playerUserIdArray[index].changed('cardsInHand', true);
-        await playerUserIdArray[index].save();
+        currUserGameRound[index].cardsInHand = JSON.stringify(hand);
+        currUserGameRound[index].changed('cardsInHand', true);
+        await currUserGameRound[index].save();
       });
 
       // Update the state of the drawPile after distributing the cards
@@ -396,6 +399,10 @@ export default function games(db) {
 
       currGame.discardPile = JSON.stringify(discardPile);
       currGame.changed('discardPile', true);
+
+      currGame.drawPile = JSON.stringify(drawPile);
+      currGame.changed('drawPile', true);
+
       await currGame.save();
 
       res.send({ setGame: 'completed', message: 'Set Game Completed' });
@@ -439,9 +446,23 @@ export default function games(db) {
     res.send({ currentGame, message: 'user has joined the game before' });
   };
 
+  // Helper to get the discarded card pile as an object
+  const getDiscardedPile = (currGame) => {
+    const discardPileJSON = currGame.discardPile;
+    const discardedPile = JSON.parse(discardPileJSON);
+    console.log(discardedPile, 'discardedPile');
+    return discardedPile;
+  };
+
   const play = async (req, res) => {
-    const cardsToBePlayed = req.body;
-    console.log(cardsToBePlayed, 'cardsToBePlayed');
+    const currGame = await db.Game.findByPk(req.params.gameId);
+    // This refers to the positions of the cards
+    // that were selected for play, stored in an array
+
+    const positionOfCardsPlayedArray = req.body;
+    console.log(positionOfCardsPlayedArray, 'position of cards to be played');
+
+    // currGame.getGamesUsers({where:...})
     const selectedGameRound = await db.GamesUser.findOne({
       where: {
         GameId: req.params.gameId,
@@ -449,13 +470,98 @@ export default function games(db) {
       },
     });
 
-    // Perform check to see if the move is legal
-    // First check how many cards are selected
+    // Get Discarded Pile
+    let discardedPile = getDiscardedPile(currGame);
+    const topDiscardedCard = discardedPile[discardedPile.length - 1];
+    console.log(topDiscardedCard, 'topDiscardedCard');
+    console.log(discardedPile, 'discardedPile');
 
-    // If move is legal, push cardsTobePlayed into discardPile
-    // Draw cards until there are 3 cards in hand
+    // Get the Draw Pile
+    const drawPile = JSON.parse(currGame.drawPile);
 
+    // Get the cardsInHand
+    let cardsInHand = JSON.parse(selectedGameRound.cardsInHand);
+    console.log(positionOfCardsPlayedArray, 'arrayPositionOfCardsTobePlayed');
     // If move is illegal, retrieve all cards from discardPile into Hand
+    if (positionOfCardsPlayedArray.length === 0) {
+      console.log('added discardPile to hand');
+      cardsInHand = [...cardsInHand, ...discardedPile];
+      // empty discard pile and no need to draw new cards
+      discardedPile = null;
+    }
+    // Else if card(s) are submitted
+    else {
+      // Perform check to see if the move is legal
+    // Test-1: First check how many cards are selected
+      if (positionOfCardsPlayedArray.length > 1) {
+      // Check if all the cards have the same rank
+        let areCardsTheSame = true;
+
+        // positionOfCardPlayed is zero indexed
+        positionOfCardsPlayedArray.forEach((positionOfCardPlayed, indexOfCardPosition) => {
+          // Check if current card(indexed) is the same as the previous selected card
+          // in the position array
+          // E.g index 1 and 2 of the cardInHand are selected, we compare
+          // card at index 2 against card against index 1
+          if (indexOfCardPosition + 1 <= positionOfCardsPlayedArray.length - 1) {
+            console.log('card1', cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition]]);
+            console.log('card2', cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition + 1]]);
+            if ((cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition]].rank)
+              !== (cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition + 1]].rank)
+            ) {
+              areCardsTheSame = false;
+            }
+          }
+        });
+        if (!areCardsTheSame) {
+          console.log('cards are not the same');
+          return;
+        }
+      }
+      // Test-2: Check if (first) card is greater than that of discardPile's top card
+      if (cardsInHand[positionOfCardsPlayedArray[0]].rank < topDiscardedCard.rank) {
+        console.log('selected card(s) is not larger discarded card');
+        return;
+      }
+
+      // If it passes test 1 and 2, means the selected cards can be pushed into the discardPile
+      console.log(discardedPile, 'oldvalue Of discard pile');
+      positionOfCardsPlayedArray.forEach((position) => {
+        discardedPile.push(cardsInHand[position]);
+      });
+      // discardedPile = [...discardedPile, ...arrayPositionOfCardsToBePlayed];
+      console.log(discardedPile, 'newValue of discardPile');
+      console.log(cardsInHand, 'cardsInHand');
+      console.log(positionOfCardsPlayedArray, 'position of cardsToBePlayed');
+      // Remove the played cards from the hand
+      positionOfCardsPlayedArray.forEach((positionOfCardPlayed) => {
+        cardsInHand.splice(positionOfCardPlayed, 1);
+      });
+
+      // Draw cards until there are 3 cards in hand
+      const numOfCardsInHand = cardsInHand.length;
+      if (numOfCardsInHand < 3) {
+        for (let i = 0; i < (3 - numOfCardsInHand); i += 1) {
+          cardsInHand.push(drawPile.pop());
+        }
+      }
+    }
+    // Update the state in selectedGameRound and currGame card JSONs in DB
+    currGame.discardedPile = JSON.stringify(discardedPile);
+    currGame.changed('discardPile', true);
+
+    currGame.drawPile = JSON.stringify(drawPile);
+    currGame.changed('drawPile', true);
+
+    selectedGameRound.cardsInHand = JSON.stringify(cardsInHand);
+    selectedGameRound.changed('cardsInHand', true);
+
+    await currGame.save();
+    await selectedGameRound.save();
+
+    console.log(currGame.discardedPile, 'updated discardedPile');
+    // console.log(currGame.drawPile, 'updated drawPile');
+    console.log(selectedGameRound.cardsInHand, 'updated cardsInHand');
 
     //* ** Player Turn has Ended ***//
 
