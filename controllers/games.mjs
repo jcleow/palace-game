@@ -191,12 +191,14 @@ export default function games(db) {
         }
       }
       // Create a JSON that stores all the player sequences for the game
-      const playerSequence = {};
+      const playerSequence = [];
 
       //
       randomPlayerNumArray.forEach(async (randNum, index) => {
         const playerTurn = index + 1;
-        playerSequence[playerTurn] = currUsersGameRoundArray[index].UserId;
+        const playerTurnAndIdObject = {};
+        playerTurnAndIdObject[playerTurn] = currUsersGameRoundArray[index].UserId;
+        playerSequence.push(playerTurnAndIdObject);
         currUsersGameRoundArray[index].playerNum = randNum;
         await currUsersGameRoundArray[index].save();
       });
@@ -523,7 +525,44 @@ export default function games(db) {
 
     //* ** Player Turn has Ended - Switch Player Turn***//
 
+    // Get Current Player ID
+    const currPlayerId = currGame.CurrentPlayerId;
+    console.log(currPlayerId, 'currPlayerId');
+
+    // Get All player sequences
+    const playerSequence = JSON.parse(currGame.playerSequence);
+    console.log(playerSequence, 'playerSequence');
+
+    // Get Current Turn Num
+    const currPlayerNumArray = playerSequence.filter((record) => {
+      console.log(Object.values(record).includes(currPlayerId), 'truthy');
+      return Object.values(record).includes(currPlayerId);
+    });
+
+    // // Convert to number...
+    const currPlayerNum = currPlayerNumArray[0][currPlayerId.toString()];
+    console.log(currPlayerId.toString(), 'toString');
+    console.log(currPlayerNum, 'currPlayerNum');
+
+    // Get Next Turn Num
+    let nextPlayerNum;
+    let nextPlayerId;
+    // if exceed num. of players means player 1 goes again
+    if (currPlayerNum + 1 > playerSequence.length) {
+      nextPlayerNum = 1;
+      nextPlayerId = playerSequence[nextPlayerNum];
+      console.log('test-1');
+    } else {
+      nextPlayerNum = currPlayerNum + 1;
+      nextPlayerId = playerSequence[nextPlayerNum];
+      console.log('test-2');
+    }
+    console.log(nextPlayerNum, 'nextPlayerNum');
+    console.log(nextPlayerNum, 'nextPlayerId');
     // Change Player Turn
+    currGame.CurrentPlayerId = nextPlayerId;
+    await currGame.save();
+
     res.send('update completed');
   };
 
