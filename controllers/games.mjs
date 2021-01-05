@@ -420,34 +420,28 @@ export default function games(db) {
     // that were selected for play, stored in an array
 
     const positionOfCardsPlayedArray = req.body;
-    console.log(positionOfCardsPlayedArray, 'position of cards to be played');
 
     const currUserGameRound = await currGame.getGamesUsers({
       where: {
         UserId: req.params.playerId,
       },
     });
-    console.log(currUserGameRound, 'currUserGameRound');
 
     // Get Discarded Pile
-    let discardedPile = getDiscardedPile(currGame);
-    const topDiscardedCard = discardedPile[discardedPile.length - 1];
-    console.log(topDiscardedCard, 'topDiscardedCard');
-    console.log(discardedPile, 'discardedPile');
+    let discardPile = getDiscardedPile(currGame);
+    const topDiscardedCard = discardPile[discardPile.length - 1];
 
     // Get the Draw Pile
     const drawPile = JSON.parse(currGame.drawPile);
 
     // Get the cardsInHand
-    console.log(currUserGameRound[0].cardsInHand, 'cardsInHand');
     let cardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
-    console.log(positionOfCardsPlayedArray, 'arrayPositionOfCardsTobePlayed');
+
     // If move is illegal, retrieve all cards from discardPile into Hand
     if (positionOfCardsPlayedArray.length === 0) {
-      console.log('added discardPile to hand');
-      cardsInHand = [...cardsInHand, ...discardedPile];
+      cardsInHand = [...cardsInHand, ...discardPile];
       // empty discard pile and no need to draw new cards
-      discardedPile = null;
+      discardPile = null;
     }
     // Else if card(s) are submitted
     else {
@@ -485,12 +479,12 @@ export default function games(db) {
       }
 
       // If it passes test 1 and 2, means the selected cards can be pushed into the discardPile
-      console.log(discardedPile, 'oldvalue Of discard pile');
+      console.log(discardPile, 'oldvalue Of discard pile');
       positionOfCardsPlayedArray.forEach((position) => {
-        discardedPile.push(cardsInHand[position]);
+        discardPile.push(cardsInHand[position]);
       });
-      // discardedPile = [...discardedPile, ...arrayPositionOfCardsToBePlayed];
-      console.log(discardedPile, 'newValue of discardPile');
+
+      console.log(discardPile, 'newValue of discardPile');
       console.log(cardsInHand, 'cardsInHand');
       console.log(positionOfCardsPlayedArray, 'position of cardsToBePlayed');
       // Remove the played cards from the hand
@@ -507,41 +501,32 @@ export default function games(db) {
       }
     }
     // Update the state in selectedGameRound and currGame card JSONs in DB
-    currGame.discardedPile = JSON.stringify(discardedPile);
+    currGame.discardPile = JSON.stringify(discardPile);
     currGame.changed('discardPile', true);
+    // await currGame.save();
 
     currGame.drawPile = JSON.stringify(drawPile);
     currGame.changed('drawPile', true);
+    await currGame.save();
 
     currUserGameRound[0].cardsInHand = JSON.stringify(cardsInHand);
     currUserGameRound[0].changed('cardsInHand', true);
 
-    await currGame.save();
     await currUserGameRound[0].save();
 
-    console.log(currGame.discardedPile, 'updated discardedPile');
-    // console.log(currGame.drawPile, 'updated drawPile');
-    console.log(currUserGameRound[0].cardsInHand, 'updated cardsInHand');
-
-    //* ** Player Turn has Ended - Switch Player Turn***//
+    // *********** Player Turn has Ended - Switch Player Turn ************//
 
     // Get Current Player ID
     const currPlayerId = currGame.CurrentPlayerId;
-    console.log(currPlayerId, 'currPlayerId');
 
     // Get All player sequences
     const playerSequence = JSON.parse(currGame.playerSequence);
-    console.log(playerSequence, 'playerSequence');
 
     // Get Current Turn Num
-    const currPlayerNumArray = playerSequence.filter((record) => {
-      console.log(Object.values(record).includes(currPlayerId), 'truthy');
-      return Object.values(record).includes(currPlayerId);
-    });
+    const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
 
     // // Convert to number...
     const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
-    console.log(currPlayerNum, 'currPlayerNum');
 
     // Get Next Turn Num
     let nextPlayerNum;
@@ -552,15 +537,13 @@ export default function games(db) {
       const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
       const nextPlayerIdArray = Object.values(nextPlayerIdObj);
       nextPlayerId = nextPlayerIdArray[0];
-      console.log(nextPlayerIdArray, 'array');
     } else {
       nextPlayerNum = (currPlayerNum + 1).toString();
       const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
       const nextPlayerIdArray = Object.values(nextPlayerIdObj);
       nextPlayerId = nextPlayerIdArray[0];
-      console.log(nextPlayerIdArray, 'array');
     }
-    console.log(nextPlayerId, 'nextPlayerId');
+
     // Change Player Turn
     currGame.CurrentPlayerId = nextPlayerId;
     await currGame.save();

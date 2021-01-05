@@ -156,7 +156,11 @@ const displayTableTopAndBtns = () => {
       const { currGame } = response.data;
       const { drawPile: drawPileJSON, discardPile: discardPileJSON } = currGame;
       // Get the most recently discarded card
-      const topDiscardedCard = JSON.parse(discardPileJSON).pop();
+      const discardPile = JSON.parse(discardPileJSON);
+      let topDiscardedCard;
+      if (discardPile !== 'null') {
+        topDiscardedCard = discardPile.pop();
+      }
 
       const loggedInPlayerFaceUpDiv = document.querySelector('.logged-in-player-face-up-cards ');
       const opponentFaceUpDiv = document.querySelector('.opponent-face-up-cards');
