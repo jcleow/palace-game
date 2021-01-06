@@ -366,8 +366,8 @@ export default function games(db) {
     }
     res.send('no ongoing games/must be loggedin');
   };
-
-  const displayHand = async (req, res) => {
+  // Display the inital 6 cards
+  const displaySetGameHand = async (req, res) => {
     const playerHand = await db.GamesUser.findOne({
       where: {
         GameId: req.params.gameId,
@@ -379,8 +379,9 @@ export default function games(db) {
     res.send({ playerHand, currGame, currGameState });
   };
 
-  // Perform update on user's facedown/faceup/currentHand/
-  const updateHand = async (req, res) => {
+  // Perform update on user's cardsInHand/facedown/faceup etc cards
+  //
+  const updateCardsAfterSetGame = async (req, res) => {
     const selectedCardsArray = req.body;
     const playerHand = await db.GamesUser.findOne({
       where: {
@@ -577,6 +578,23 @@ export default function games(db) {
         if (cardsInHand[positionOfCardsPlayedArray[0]].rank === 10) {
           discardPile.length = 0;
         }
+        // Special case if 4 of a kind are played in a row, remove all the discardPile
+        const isFourOfAKindPlayed = false;
+        let numOfSameConsecutiveCards = 0;
+        if (discardPile.length > 3) {
+          // Start looping from the second last index
+          for (let i = discardPile.length - 2; i > discardPile.length - 5; i -= 1) {
+            // Compare against the second last index against the last index / compare backwards
+            if (discardPile[i] === discardPile[i + 1]) {
+              numOfSameConsecutiveCards += 1;
+              if (numOfSameConsecutiveCards === 4) {
+                isFourOfAKindPlayed = true;
+                // remove all cards in discardPile
+                discardPile.length = 0;
+              }
+            }
+          }
+        }
 
         // Remove the played cards from the hand
         updatedCardsInHand = cardsInHand.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
@@ -603,16 +621,16 @@ export default function games(db) {
       currUserGameRound[0].changed('cardsInHand', true);
       await currUserGameRound[0].save();
 
-      // *********** Player Turn has Ended - Switch Player Turn ************//
-      // Only switch turn if the card played is not a 10
-      // or no 4 of a kind is played consecutively
+      // *********** Switch Player Turn Logic ************//
+      // When cards other than 10 is played, and 4 of a kind is NOT played consecutively
+      // we switch players
       if (positionOfCardsPlayedArray.length > 0) {
-        if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10) {
+        if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10 && isFourOfAKindPlayed === false) {
           const result = await switchPlayerTurn(currGame);
           res.send(result);
           return;
         }
-        // Otherwise if a wild card is played, do not switch players
+        // Otherwise when wild card 10 is played, we do not switch players
         const currPlayer = await currUserGameRound[0].getUser();
         res.send({ currGame, currPlayer, message: 'update completed with a wild card played' });
         return;
@@ -636,8 +654,8 @@ export default function games(db) {
     index,
     show,
     setGame,
-    displayHand,
-    updateHand,
+    displaySetGameHand,
+    updateCardsAfterSetGame,
     join,
     play,
   };

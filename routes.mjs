@@ -48,10 +48,10 @@ export default function routes(app) {
   // app.get('/games/:id/score', GamesController.score);
 
   // get selected player's first 6 cards
-  app.get('/games/:gameId/players/:playerId', GamesController.displayHand);
+  app.get('/games/:gameId/players/:playerId', GamesController.displaySetGameHand);
 
   // Update player's hand /facedown cards after setting the game
-  app.put('/games/:gameId/players/:playerId', GamesController.updateHand);
+  app.put('/games/:gameId/players/:playerId', GamesController.updateCardsAfterSetGame);
 
   // Business logic for all the moves(play) made inside the main game
   app.put('/games/:gameId/players/:playerId/play', GamesController.play);
