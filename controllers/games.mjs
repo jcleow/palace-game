@@ -506,8 +506,10 @@ export default function games(db) {
       const cardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
       console.log(cardsInHand, 'original cardsInHand');
 
-      // Track the updated cards in hand
+      // Function scoped - Track the updated cards in hand
       let updatedCardsInHand = [];
+      // Function scoped - Track if four of a kind is played
+      let isFourOfAKindPlayed = false;
 
       // ********* Card Validation Logic *********** //
       // If move is illegal, retrieve all cards from discardPile into Hand
@@ -579,7 +581,7 @@ export default function games(db) {
           discardPile.length = 0;
         }
         // Special case if 4 of a kind are played in a row, remove all the discardPile
-        const isFourOfAKindPlayed = false;
+
         let numOfSameConsecutiveCards = 0;
         if (discardPile.length > 3) {
           // Start looping from the second last index
