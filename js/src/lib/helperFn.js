@@ -95,10 +95,7 @@ const renderCardsInHand = (selectedCardsPositionArray, selectedPlayerHandArray,
 
     const cardIndex = index;
 
-    cardImg.addEventListener('click', () => {
-      //
-      selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, faceUpCard, topDiscardedCard);
-    });
+    cardImg.addEventListener('click', () => selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, faceUpCard, topDiscardedCard));
   });
 };
 
@@ -135,6 +132,41 @@ const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) =
     selectedDivToAppendTo.appendChild(discardedCardImg);
   }
 };
+
+// Create a play button to submit cards
+const createPlayBtn = (playBtnContainer) => {
+  const playBtn = document.createElement('button');
+  playBtn.setAttribute('id', 'play-btn');
+  playBtn.innerText = 'Play Selected Cards';
+  playBtnContainer.append(playBtn);
+  return playBtn;
+};
+// Function that gets the existing state of the game from the table through AJAX
+const refreshGameInfo = () => {
+  console.log('gameIsRefreshed');
+  axios.get(`/games/${currentGame.id}`)
+    .then((response) => {
+      const { gameState: currGameState } = response.data.currGame;
+      const { currGameRoundUsernames, currPlayer } = response.data;
+      if (currGameState === 'waiting') {
+        // update users who have joined the game
+        updateUsersJoinedDiv(currGameRoundUsernames);
+      } else if (currGameState === 'setGame') {
+        displaySetGameCardPicsAndBtn(response);
+        console.log('gameIsRefreshed-setgame-state');
+      } else if (currGameState === 'begin') {
+        // Update to see who is the current user(name) to play
+        updatePlayerActionDiv(currPlayer);
+        // Display all the cards on the table as well as cards in each player's hand
+        displayTableTopAndBtns();
+        console.log('gameIsRefreshed-begin-state!!');
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
 const displayTableTopAndBtns = () => {
   const tableTop = document.querySelector('.table-top-display');
   tableTop.style.display = 'block';
@@ -190,45 +222,39 @@ const displayTableTopAndBtns = () => {
       // of cards to play
       renderCardsInHand(selectedCardsPositionArray, loggedInPlayerHands,
         privateHandDiv, selectedCardsArray, topDiscardedCard);
+      console.log(selectedCardsPositionArray, 'selected positions array');
       // Render logged-in player's face down cards
       renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv);
       // Render draw pile and discard pile
       renderMiscCards(drawPileJSON, discardPileJSON, centerMiscCardsDiv);
-      console.log(loggedInUserId, 'loggedInUserId');
-      console.log(currGame.CurrentPlayerId, 'currPlayerId');
       // If it is loggedInUser's turn surface the [Play] button
       if (currGame.CurrentPlayerId === loggedInUserId) {
         console.log('reached here');
         // removes the playbtn if already created
         const playBtnContainer = document.querySelector('.play-button-container');
-        let playBtn = document.querySelector('#play-btn');
-        if (!playBtn) {
-          playBtn = document.createElement('button');
-          playBtn.setAttribute('id', 'play-btn');
-
-          playBtn.innerText = 'Play Selected Cards';
-          playBtnContainer.append(playBtn);
-        } else {
-          // Btn already exists. Re-enable it
-          playBtn.disabled = false;
-        }
+        playBtnContainer.innerHTML = '';
+        const playBtn = createPlayBtn(playBtnContainer);
 
         playBtn.addEventListener('click', () => {
+          console.log('clicked once');
           axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`, selectedCardsPositionArray)
             .then((playCardsResponse) => {
-              console.log(playCardsResponse, 'playCardsResponse');
               currentGame = playCardsResponse.data.currGame;
               refreshGameInfo();
+              playBtn.disabled = true;
             })
             .catch((error) => { console.log(error); });
         });
         // Else it is not the loggedInUser's turn, disable the play button
       } else {
         const playBtn = document.querySelector('#play-btn');
-        playBtn.disabled = true;
+        if (playBtn) {
+          playBtn.disabled = true;
+        }
       }
     });
 };
+
 // Displaying all the card pictures and relevant button for setting the faceup cards
 const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
   const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
@@ -353,36 +379,10 @@ const selectCardsToPlay = (selectedCardsPositionArray, selectedCardsArray, cardI
     selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
     selectedCardsPositionArray.splice(selectedCardsPositionArray.indexOf(cardIndex), 1);
   }
+  console.log(selectedCardsArray, 'selectedCards');
+  console.log(selectedCardsPositionArray, 'selectedPositions');
+  return selectedCardsPositionArray;
 };
-
-// Make a request to the server
-// to change the deck. set 2 new cards into the player hand.
-const dealCards = (currentGame) => {
-  axios.put(`/games/${currentGame.id}/deal`)
-    .then((response) => {
-      // get the updated hand value
-      currentGame = response.data;
-
-      // If any of the current user wins in this round by having a score of 3...
-      // then he is the winner
-      if (currentGame.gameStatus === 'gameOver') {
-        const dealBtn = document.querySelector('#deal-btn');
-        dealBtn.disabled = true;
-        const displayGameOverMsg = document.querySelector('#game-over');
-        displayGameOverMsg.innerText = `Game Over. Winner is P${currentGame.currRoundWinner}`;
-      }
-    })
-    .then(() => {
-      // Update the display of the running score for both players
-
-    })
-    .catch((error) => {
-      // handle error
-      console.log(error);
-    });
-};
-
-// Display all the card pictures for both players, drawPile, discardPile,table-top cards and hand
 
 // Function that executes the setting up of game - allowing players to choose which cards to face up
 const setGame = () => {
@@ -403,29 +403,6 @@ const setGame = () => {
     })
     .catch((error) => {
       // handle error
-      console.log(error);
-    });
-};
-
-// Function that gets the existing state of the game from the table through AJAX
-const refreshGameInfo = () => {
-  axios.get(`/games/${currentGame.id}`)
-    .then((response) => {
-      const { gameState: currGameState } = response.data.currGame;
-      const { currGameRoundUsernames, currPlayer } = response.data;
-      if (currGameState === 'waiting') {
-        // update users who have joined the game
-        updateUsersJoinedDiv(currGameRoundUsernames);
-      } else if (currGameState === 'setGame') {
-        displaySetGameCardPicsAndBtn(response);
-      } else if (currGameState === 'begin') {
-        // Update to see who is the current user(name) to play
-        updatePlayerActionDiv(currPlayer);
-        // Display all the cards on the table as well as cards in each player's hand
-        displayTableTopAndBtns();
-      }
-    })
-    .catch((error) => {
       console.log(error);
     });
 };
@@ -464,7 +441,7 @@ export {
   renderCardsInHand, renderOpponentHand,
   renderMiscCards, selectCardsToPlay,
   displaySetGameCardPicsAndBtn, displayTableTopAndBtns,
-  dealCards, setGame,
+  setGame,
   refreshGameInfo, createStartBtn,
   createDealBtn, createRefreshBtn,
 };

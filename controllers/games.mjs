@@ -319,22 +319,6 @@ export default function games(db) {
     } else if (currGame.gameState === 'setGame') {
       res.redirect(`/games/${req.params.gameId}/players/${req.loggedInUserId}`);
     } else if (currGame.gameState === 'begin') {
-      // Find player's userid where playerNum is 1...
-
-      // Get current player's
-
-      // If the game has just begun - initialize with player 1
-
-      // const currPlayer = await db.User.findOne({
-      //   include: {
-      //     model: db.GamesUser,
-      //     where: {
-      //       playerNum: 1,
-      //       GameId: currGame.id,
-      //     },
-      //   },
-      // });
-
       // Else find the user with the next player id
       let currPlayer;
       const currPlayerArray = await currGame.getUsers({
@@ -499,6 +483,7 @@ export default function games(db) {
       // that were selected for play, stored in an array
 
       const positionOfCardsPlayedArray = req.body;
+      console.log(positionOfCardsPlayedArray, 'position of cards played');
 
       const currUserGameRound = await currGame.getGamesUsers({
         where: {
@@ -518,6 +503,7 @@ export default function games(db) {
 
       // Get the cardsInHand
       const cardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
+      console.log(cardsInHand, 'original cardsInHand');
 
       // Track the updated cards in hand
       let updatedCardsInHand = [];
@@ -545,7 +531,9 @@ export default function games(db) {
           // card at index 2 against card against index 1
             if (indexOfCardPosition + 1 <= positionOfCardsPlayedArray.length - 1) {
               console.log('card1', cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition]]);
+              console.log(positionOfCardsPlayedArray[indexOfCardPosition], 'posNo-1');
               console.log('card2', cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition + 1]]);
+              console.log(positionOfCardsPlayedArray[indexOfCardPosition], 'posNo-2');
               if ((cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition]].rank)
               !== (cardsInHand[positionOfCardsPlayedArray[indexOfCardPosition + 1]].rank)
               ) {
@@ -559,13 +547,18 @@ export default function games(db) {
           }
         }
         // Test-2: Check if (first) card is greater than that of discardPile's top card
+        // OR if the discardPile's top card is of rank 10
+        // (only happens when it is the first random card of the game)
         // Only relevant if topDiscardedCard is not undefined
         if (topDiscardedCard) {
-          // Wildcard 2: Resets the discard pile to number 2
-          // Wildcard 10: Removes all the discard pile
-          if (cardsInHand[positionOfCardsPlayedArray[0]].rank < topDiscardedCard.rank) {
+          if (topDiscardedCard.rank !== 10
+            && cardsInHand[positionOfCardsPlayedArray[0]].rank < topDiscardedCard.rank) {
+            // Wildcard 2: Resets the discard pile to number 2
+            // Wildcard 10: Removes all the discard pile
             if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 2
               && cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10) {
+              console.log(cardsInHand[positionOfCardsPlayedArray[0]], 'selected card');
+              console.log(topDiscardedCard, 'topDiscardedCard');
               console.log('selected card(s) is not larger discarded card and is not a wildcard');
               return;
             }
@@ -573,8 +566,10 @@ export default function games(db) {
         }
 
         // If it passes test 1 and 2, means the selected cards can be pushed into the discardPile
+        console.log(positionOfCardsPlayedArray, 'position array');
         positionOfCardsPlayedArray.forEach((position) => {
           discardPile.push(cardsInHand[position]);
+          console.log(discardPile, 'pushed in a new card');
         });
         console.log(discardPile, 'discardPile');
 
@@ -606,7 +601,6 @@ export default function games(db) {
 
       currUserGameRound[0].cardsInHand = JSON.stringify(updatedCardsInHand);
       currUserGameRound[0].changed('cardsInHand', true);
-
       await currUserGameRound[0].save();
 
       // *********** Player Turn has Ended - Switch Player Turn ************//
