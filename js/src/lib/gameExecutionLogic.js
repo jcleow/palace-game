@@ -3,7 +3,8 @@ import { updateUsersJoinedDiv, updatePlayerActionDiv } from './updateHeaderDivFn
 import {
   renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand,
 } from './renderCards.js';
-
+import { createPlayBtn } from './buttonCreation.js';
+import getCardPicUrl from './getCardPicUrlFn.js';
 // ************ Business Logic ***********//
 
 /** Function that keeps track of all the selected cards in play
@@ -185,7 +186,7 @@ const displayTableTopAndBtns = () => {
     });
 };
 
-// Displaying all the card pictures and relevant button for setting the faceup cards
+// Logic for display all the 6 card pictures and relevant button for setting the faceup cards
 const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
   const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
 
@@ -232,8 +233,6 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
     // Perform request to server to update faceDownCards
     axios.put(`/games/${currentGame.id}/players/${loggedInUserId}`, selectedCardsArray)
       .then((editResponse) => {
-        console.log(editResponse);
-        console.log(editResponse, 'editResponse');
         // if all players have completed setting up their faceUpCards...
         if (editResponse.data.setGame === 'completed') {
           return axios.get(`/games/${currentGame.id}`);
@@ -241,7 +240,6 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
       })
       .then((currentGameResponse) => {
         if (currentGameResponse) {
-          console.log(currentGameResponse, 'currentGameDataResponse');
           // Render the pictures on the table
           displayTableTopAndBtns();
         }
@@ -276,26 +274,6 @@ const setGame = () => {
 };
 
 // ********Creation of UI Elements ********//
-
-// Function that generates the path to each individual card
-const getCardPicUrl = (card) => {
-  let imgSrc = '';
-
-  // get directory for each of the cards
-  imgSrc = `/cardPictures/${card.suit.toUpperCase()}-${card.rank}`;
-
-  // If Ace is drawn, reassign Ace's rank to 1 for rendering picture purposes
-  if (card.rank === 14) {
-    imgSrc = `/cardPictures/${card.suit.toUpperCase()}-${1}`;
-  }
-  if (card.rank >= 11 && card.rank <= 13) {
-    imgSrc += `-${card.name.toUpperCase()}`;
-  }
-  imgSrc += '.png';
-  // Returns the link to the image
-  return imgSrc;
-};
-
 const renderCardsInHand = (selectedCardsPositionArray, selectedPlayerHandArray,
   selectedDivToAppendTo, selectedCardsArray, topDiscardedCard) => {
   // Clear everything in the existing div and re-add in new cards
@@ -308,15 +286,6 @@ const renderCardsInHand = (selectedCardsPositionArray, selectedPlayerHandArray,
     const cardIndex = index;
     cardImg.addEventListener('click', () => selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, faceUpCard, topDiscardedCard));
   });
-};
-
-// Create a play button to submit cards
-const createPlayBtn = (playBtnContainer) => {
-  const playBtn = document.createElement('button');
-  playBtn.setAttribute('id', 'play-btn');
-  playBtn.innerText = 'Play Selected Cards';
-  playBtnContainer.append(playBtn);
-  return playBtn;
 };
 
 // Create a Start Button

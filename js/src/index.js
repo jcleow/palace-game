@@ -4,10 +4,10 @@ import './styles.scss';
 // Import Helper Functions
 import {
   createStartBtn, createRefreshBtn,
-} from './lib/helperFn.js';
+} from './lib/gameExecutionLogic.js';
 import { createLoginForm, createUserIdLabelAndLogOutBtnDisplay } from './lib/createLoginFormFn.js';
 import { updateUsersJoinedDiv } from './lib/updateHeaderDivFn.js';
-import createNewGameBtn from './lib/buttonCreation.js';
+import { createNewGameBtn } from './lib/buttonCreation.js';
 
 // get the gameInterface div
 const gameInterface = document.querySelector('#game-interface');
