@@ -1,23 +1,67 @@
-// Function that generates the path to each individual card
-const getCardPicUrl = (card) => {
-  let imgSrc = '';
+import getCardPicUrl from './getCardPicUrlFn.js';
 
-  // get directory for each of the cards
-  imgSrc = `/cardPictures/${card.suit.toUpperCase()}-${card.rank}`;
-
-  // If Ace is drawn, reassign Ace's rank to 1 for rendering picture purposes
-  if (card.rank === 14) {
-    imgSrc = `/cardPictures/${card.suit.toUpperCase()}-${1}`;
+/** Function that keeps track of all the selected cards in play
+ * @param {Array} selectedCardsPositionArray
+ * An array that the parent function holds to keep
+ * track of the number of selected cards through their indices
+ *
+ * @param {DOMObject} cardImg
+ *
+ * @param {Object} card
+ *
+ * @param {Integer} limit
+ * Max number of cards that is to be selected at
+ * anyone time
+ *
+ */
+const selectCardsToPlay = (selectedCardsPositionArray, selectedCardsArray, cardIndex,
+  cardImg, card, topDiscardedCard) => {
+  // Need to remove flashing red border if say a user decides to pick another higher value card
+  // instead of the first higher value card previously chosen
+  if (cardImg.classList.contains('invalid-selection')) {
+    cardImg.classList.remove('invalid-selection');
   }
-  if (card.rank >= 11 && card.rank <= 13) {
-    imgSrc += `-${card.name.toUpperCase()}`;
+  // If selecting a previously unselected card...
+  if (!cardImg.style.border) {
+    // Check if current selected card has a higher or same rank as discardPileCard
+    // Or whether the current selected card is wildCard 2 or 10
+    if (!topDiscardedCard || card.rank >= topDiscardedCard.rank
+       || card.rank === 2 || card.rank === 10) {
+      cardImg.style.border = 'thick solid #0000FF';
+      // Next, check if another card has already been selected...
+      if (selectedCardsPositionArray.length > 0) {
+        // Next check if this card selected has the same rank as the first
+        // (otherwise all other) selected cards
+        // If the 2 cards have the same rank means they are the same card...
+        if (selectedCardsArray[0].rank === card.rank) {
+          selectedCardsArray.push(card);
+          selectedCardsPositionArray.push(cardIndex);
+          // Otherwise this is an invalid selection
+        } else {
+          cardImg.style.border = '';
+          cardImg.classList.add('invalid-selection');
+        }
+        // Else there is no cards currently selected and it is a valid selection
+      } else {
+        selectedCardsArray.push(card);
+        selectedCardsPositionArray.push(cardIndex);
+      }
+      // If current card selected has a lower rank than discardPileCard
+    } else {
+      cardImg.classList.add('invalid-selection');
+    }
+  // Otherwise selecting a previously selected card
+  } else {
+    cardImg.style.border = '';
+    // Remove selected card from its position
+    selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
+    selectedCardsPositionArray.splice(selectedCardsPositionArray.indexOf(cardIndex), 1);
   }
-  imgSrc += '.png';
-  // Returns the link to the image
-  return imgSrc;
+  console.log(selectedCardsArray, 'selectedCards');
+  console.log(selectedCardsPositionArray, 'selectedPositions');
+  return selectedCardsPositionArray;
 };
 
-// Helper that renders face up cards
 const renderFaceUpCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
@@ -73,6 +117,20 @@ const renderOpponentHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   });
 };
 
+const renderCardsInHand = (selectedCardsPositionArray, selectedPlayerHandArray,
+  selectedDivToAppendTo, selectedCardsArray, topDiscardedCard) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard, index) => {
+    const cardImg = document.createElement('img');
+    cardImg.src = getCardPicUrl(faceUpCard);
+    cardImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(cardImg);
+    const cardIndex = index;
+    cardImg.addEventListener('click', () => selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, faceUpCard, topDiscardedCard));
+  });
+};
+
 export {
-  renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand,
+  renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand,
 };
