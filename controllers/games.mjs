@@ -118,6 +118,54 @@ export default function games(db) {
     return discardedPile;
   };
 
+  // Switch player helper
+  const switchPlayerTurn = async (currGame) => {
+    try {
+      // Get Current Player ID
+      const currPlayerId = currGame.CurrentPlayerId;
+
+      // Get All player sequences
+      const playerSequence = JSON.parse(currGame.playerSequence);
+
+      // Get Current Turn Num
+      const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
+
+      // // Convert to number...
+      const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
+      console.log(currPlayerNum, 'currPlayerNum');
+
+      // Get Next Turn Num
+      let nextPlayerNum;
+      let nextPlayerId;
+      // if exceed num. of players means player 1 goes again
+      if (currPlayerNum + 1 > playerSequence.length) {
+        nextPlayerNum = '1';
+        const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+        const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+        nextPlayerId = nextPlayerIdArray[0];
+      } else {
+        nextPlayerNum = (currPlayerNum + 1).toString();
+        const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+        const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+        nextPlayerId = nextPlayerIdArray[0];
+      }
+      console.log(nextPlayerNum, 'nextPlayerNum -string');
+      console.log(nextPlayerId, 'nextPlayerId-integer');
+
+      // Get next player instance and send the response
+      const currPlayer = await db.User.findByPk(nextPlayerId);
+
+      // // Change Player Turn by using associative method
+      // await currPlayer.addCurrentPlayerTurns(currGame);
+
+      currGame.CurrentPlayerId = nextPlayerId;
+      await currGame.save();
+      return { currGame, currPlayer, message: 'update completed' };
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  // ************/ Route related functions ************/
   // create a new game. Insert a new row in the DB.
   const create = async (req, res) => {
     // deal out a new shuffled deck for this game.
@@ -564,55 +612,26 @@ export default function games(db) {
       // *********** Player Turn has Ended - Switch Player Turn ************//
       // Only switch turn if the card played is not a 2 or 10
       // or no 4 of a kind is played consecutively
-      if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 2
-        && cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10
-      ) {
-      // Get Current Player ID
-        const currPlayerId = currGame.CurrentPlayerId;
-
-        // Get All player sequences
-        const playerSequence = JSON.parse(currGame.playerSequence);
-
-        // Get Current Turn Num
-        const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
-
-        // // Convert to number...
-        const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
-        console.log(currPlayerNum, 'currPlayerNum');
-
-        // Get Next Turn Num
-        let nextPlayerNum;
-        let nextPlayerId;
-        // if exceed num. of players means player 1 goes again
-        if (currPlayerNum + 1 > playerSequence.length) {
-          nextPlayerNum = '1';
-          const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-          const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-          nextPlayerId = nextPlayerIdArray[0];
-        } else {
-          nextPlayerNum = (currPlayerNum + 1).toString();
-          const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-          const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-          nextPlayerId = nextPlayerIdArray[0];
+      if (positionOfCardsPlayedArray.length > 0) {
+        if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 2
+          && cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10
+        ) {
+          const result = await switchPlayerTurn(currGame);
+          res.send(result);
+          return;
         }
-        console.log(nextPlayerNum, 'nextPlayerNum -string');
-        console.log(nextPlayerId, 'nextPlayerId-integer');
-
-        // Get next player instance and send the response
-        const currPlayer = await db.User.findByPk(nextPlayerId);
-
-        // // Change Player Turn by using associative method
-        // await currPlayer.addCurrentPlayerTurns(currGame);
-
-        currGame.CurrentPlayerId = nextPlayerId;
-        currGame.save();
-
-        res.send({ currGame, currPlayer, message: 'update completed' });
+        // Otherwise if a wild card is played, do not switch players
+        const currPlayer = await currUserGameRound[0].getUser();
+        res.send({ currGame, currPlayer, message: 'update completed with a wild card played' });
         return;
       }
-      // Otherwise if a wild card is played
-      const currPlayer = await currUserGameRound.getUser();
-      res.send({ currGame, currPlayer, message: 'update completed with a wild card played' });
+
+      // If player couldn't play a card - switch turns
+      if (positionOfCardsPlayedArray.length === 0) {
+        const result = await switchPlayerTurn(currGame);
+        res.send(result);
+        return;
+      }
     } catch (error) {
       console.log(error);
     }
