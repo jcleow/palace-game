@@ -610,12 +610,10 @@ export default function games(db) {
       await currUserGameRound[0].save();
 
       // *********** Player Turn has Ended - Switch Player Turn ************//
-      // Only switch turn if the card played is not a 2 or 10
+      // Only switch turn if the card played is not a 10
       // or no 4 of a kind is played consecutively
       if (positionOfCardsPlayedArray.length > 0) {
-        if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 2
-          && cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10
-        ) {
+        if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10) {
           const result = await switchPlayerTurn(currGame);
           res.send(result);
           return;
