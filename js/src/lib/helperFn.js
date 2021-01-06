@@ -118,7 +118,7 @@ const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) =
   selectedDivToAppendTo.innerHTML = '';
   // Rendering draw pile picture (if it still exists)
   const drawPileArray = JSON.parse(drawPileJSON);
-  if (drawPileArray.length > 0) {
+  if (drawPileArray[0] !== null) {
     const drawPileImg = document.createElement('img');
     drawPileImg.src = '/cardPictures/COVER-CARD.png';
     drawPileImg.classList.add('card-pic');
@@ -126,10 +126,11 @@ const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) =
   }
 
   // Rendering discard pile picture if it is more than 1
-  const discardPile = JSON.parse(discardPileJSON);
-  if (drawPileArray.length > 0) {
+  const discardPileArray = JSON.parse(discardPileJSON);
+  console.log(discardPileArray, 'discardPileArray');
+  if (discardPileArray.length > 0) {
     const discardedCardImg = document.createElement('img');
-    discardedCardImg.src = getCardPicUrl(discardPile[discardPile.length - 1]);
+    discardedCardImg.src = getCardPicUrl(discardPileArray[discardPileArray.length - 1]);
     discardedCardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(discardedCardImg);
   }
@@ -198,22 +199,33 @@ const displayTableTopAndBtns = () => {
       // If it is loggedInUser's turn surface the [Play] button
       if (currGame.CurrentPlayerId === loggedInUserId) {
         console.log('reached here');
+        // removes the playbtn if already created
         const playBtnContainer = document.querySelector('.play-button-container');
-        playBtnContainer.innerHTML = '';
+        let playBtn = document.querySelector('#play-btn');
+        if (!playBtn) {
+          playBtn = document.createElement('button');
+          playBtn.setAttribute('id', 'play-btn');
 
-        const playBtn = document.createElement('button');
-
-        playBtn.innerText = 'Play Selected Cards';
-        playBtnContainer.append(playBtn);
+          playBtn.innerText = 'Play Selected Cards';
+          playBtnContainer.append(playBtn);
+        } else {
+          // Btn already exists. Re-enable it
+          playBtn.disabled = false;
+        }
 
         playBtn.addEventListener('click', () => {
           axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`, selectedCardsPositionArray)
             .then((playCardsResponse) => {
               console.log(playCardsResponse, 'playCardsResponse');
               currentGame = playCardsResponse.data.currGame;
+              refreshGameInfo();
             })
             .catch((error) => { console.log(error); });
         });
+        // Else it is not the loggedInUser's turn, disable the play button
+      } else {
+        const playBtn = document.querySelector('#play-btn');
+        playBtn.disabled = true;
       }
     });
 };
@@ -307,8 +319,10 @@ const selectCardsToPlay = (selectedCardsPositionArray, selectedCardsArray, cardI
   }
   // If selecting a previously unselected card...
   if (!cardImg.style.border) {
-    // Check if current card selected has a higher or same rank as discardPileCard
-    if (card.rank >= topDiscardedCard.rank) {
+    // Check if current selected card has a higher or same rank as discardPileCard
+    // Or whether the current selected card is wildCard 2 or 10
+    if (!topDiscardedCard || card.rank >= topDiscardedCard.rank
+       || card.rank === 2 || card.rank === 10) {
       cardImg.style.border = 'thick solid #0000FF';
       // Next, check if another card has already been selected...
       if (selectedCardsPositionArray.length > 0) {

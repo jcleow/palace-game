@@ -299,7 +299,7 @@ export default function games(db) {
       if (currPlayerArray.length > 0) {
         currPlayer = currPlayerArray[0];
         // Otherwise if game has not yet been initialized
-        // We have to search the Users table through
+        // We have to search the Users table through the join table as well
       } else {
         currPlayer = await db.User.findOne({
           include: {
@@ -460,19 +460,26 @@ export default function games(db) {
 
       // Get Discarded Pile
       let discardPile = getDiscardedPile(currGame);
-      const topDiscardedCard = discardPile[discardPile.length - 1];
+      let topDiscardedCard;
+      if (discardPile.length > 0) {
+        topDiscardedCard = discardPile[discardPile.length - 1];
+      }
 
       // Get the Draw Pile
       const drawPile = JSON.parse(currGame.drawPile);
 
       // Get the cardsInHand
-      let cardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
+      const cardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
 
+      // Track the updated cards in hand
+      let updatedCardsInHand = [];
+
+      // ********* Card Validation Logic *********** //
       // If move is illegal, retrieve all cards from discardPile into Hand
       if (positionOfCardsPlayedArray.length === 0) {
-        cardsInHand = [...cardsInHand, ...discardPile];
+        updatedCardsInHand = [...cardsInHand, ...discardPile];
         // empty discard pile and no need to draw new cards
-        discardPile = null;
+        discardPile = [];
       }
       // Else if card(s) are submitted
       else {
@@ -504,93 +511,108 @@ export default function games(db) {
           }
         }
         // Test-2: Check if (first) card is greater than that of discardPile's top card
-        if (cardsInHand[positionOfCardsPlayedArray[0]].rank < topDiscardedCard.rank) {
-          console.log('selected card(s) is not larger discarded card');
-          return;
+        // Only relevant if topDiscardedCard is not undefined
+        if (topDiscardedCard) {
+          // Wildcard 2: Resets the discard pile to number 2
+          // Wildcard 10: Removes all the discard pile
+          if (cardsInHand[positionOfCardsPlayedArray[0]].rank < topDiscardedCard.rank) {
+            if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 2
+              && cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10) {
+              console.log('selected card(s) is not larger discarded card and is not a wildcard');
+              return;
+            }
+          }
         }
 
         // If it passes test 1 and 2, means the selected cards can be pushed into the discardPile
-
         positionOfCardsPlayedArray.forEach((position) => {
           discardPile.push(cardsInHand[position]);
         });
-        // Remove the played cards from the hand
-        positionOfCardsPlayedArray.forEach((positionOfCardPlayed) => {
-          cardsInHand.splice(positionOfCardPlayed, 1);
-        });
+        console.log(discardPile, 'discardPile');
 
+        // Special case if wildcard 10 is played, remove all the discardPile
+        if (cardsInHand[positionOfCardsPlayedArray[0]].rank === 10) {
+          discardPile.length = 0;
+        }
+
+        // Remove the played cards from the hand
+        updatedCardsInHand = cardsInHand.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
+        console.log(updatedCardsInHand, 'updatedCardsInHand');
         // Draw cards until there are 3 cards in hand
-        const numOfCardsInHand = cardsInHand.length;
+        const numOfCardsInHand = updatedCardsInHand.length;
         if (numOfCardsInHand < 3) {
           for (let i = 0; i < (3 - numOfCardsInHand); i += 1) {
-            cardsInHand.push(drawPile.pop());
+            updatedCardsInHand.push(drawPile.pop());
           }
         }
       }
+      console.log(updatedCardsInHand, 'updatedCardsInHand-2');
+
       // Update the state in selectedGameRound and currGame card JSONs in DB
       currGame.discardPile = JSON.stringify(discardPile);
       currGame.changed('discardPile', true);
-      // await currGame.save();
 
       currGame.drawPile = JSON.stringify(drawPile);
       currGame.changed('drawPile', true);
       await currGame.save();
 
-      currUserGameRound[0].cardsInHand = JSON.stringify(cardsInHand);
+      currUserGameRound[0].cardsInHand = JSON.stringify(updatedCardsInHand);
       currUserGameRound[0].changed('cardsInHand', true);
 
       await currUserGameRound[0].save();
 
       // *********** Player Turn has Ended - Switch Player Turn ************//
-
+      // Only switch turn if the card played is not a 2 or 10
+      // or no 4 of a kind is played consecutively
+      if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 2
+        && cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10
+      ) {
       // Get Current Player ID
-      const currPlayerId = currGame.CurrentPlayerId;
+        const currPlayerId = currGame.CurrentPlayerId;
 
-      // Get All player sequences
-      const playerSequence = JSON.parse(currGame.playerSequence);
+        // Get All player sequences
+        const playerSequence = JSON.parse(currGame.playerSequence);
 
-      // Get Current Turn Num
-      const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
+        // Get Current Turn Num
+        const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
 
-      // // Convert to number...
-      const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
-      console.log(currPlayerNum, 'currPlayerNum');
+        // // Convert to number...
+        const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
+        console.log(currPlayerNum, 'currPlayerNum');
 
-      // Get Next Turn Num
-      let nextPlayerNum;
-      let nextPlayerId;
-      // if exceed num. of players means player 1 goes again
-      if (currPlayerNum + 1 > playerSequence.length) {
-        nextPlayerNum = '1';
-        const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-        const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-        nextPlayerId = nextPlayerIdArray[0];
-      } else {
-        nextPlayerNum = (currPlayerNum + 1).toString();
-        const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-        const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-        nextPlayerId = nextPlayerIdArray[0];
+        // Get Next Turn Num
+        let nextPlayerNum;
+        let nextPlayerId;
+        // if exceed num. of players means player 1 goes again
+        if (currPlayerNum + 1 > playerSequence.length) {
+          nextPlayerNum = '1';
+          const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+          const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+          nextPlayerId = nextPlayerIdArray[0];
+        } else {
+          nextPlayerNum = (currPlayerNum + 1).toString();
+          const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+          const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+          nextPlayerId = nextPlayerIdArray[0];
+        }
+        console.log(nextPlayerNum, 'nextPlayerNum -string');
+        console.log(nextPlayerId, 'nextPlayerId-integer');
+
+        // Get next player instance and send the response
+        const currPlayer = await db.User.findByPk(nextPlayerId);
+
+        // // Change Player Turn by using associative method
+        // await currPlayer.addCurrentPlayerTurns(currGame);
+
+        currGame.CurrentPlayerId = nextPlayerId;
+        currGame.save();
+
+        res.send({ currGame, currPlayer, message: 'update completed' });
+        return;
       }
-      console.log(nextPlayerNum, 'nextPlayerNum -string');
-      console.log(nextPlayerId, 'nextPlayerId-integer');
-
-      // Get next player instance and send the response
-      const currPlayer = await db.User.findByPk(nextPlayerId);
-
-      // // Change Player Turn by using associative method
-      // await currPlayer.addCurrentPlayerTurns(currGame);
-
-      currGame.CurrentPlayerId = nextPlayerId;
-      currGame.save();
-
-      // await db.Game.update({ CurrentPlayerId: nextPlayerId },
-      //   {
-      //     where: {
-      //       id: currGame.id,
-      //     },
-      //   });
-
-      res.send({ currGame, currPlayer, message: 'update completed' });
+      // Otherwise if a wild card is played
+      const currPlayer = await currUserGameRound.getUser();
+      res.send({ currGame, currPlayer, message: 'update completed with a wild card played' });
     } catch (error) {
       console.log(error);
     }
