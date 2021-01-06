@@ -96,6 +96,62 @@ const makeDeck = function () {
   return deck;
 };
 
+// To get the discarded card pile as an object
+const getDiscardedPile = (currGame) => {
+  const discardPileJSON = currGame.discardPile;
+  const discardedPile = JSON.parse(discardPileJSON);
+  return discardedPile;
+};
+
+// Switch player turn helper
+const switchPlayerTurn = async (currGame, db) => {
+  // Make current player function scoped
+  let currPlayer;
+  try {
+    // Get Current Player ID
+    const currPlayerId = currGame.CurrentPlayerId;
+
+    // Get All player sequences
+    const playerSequence = JSON.parse(currGame.playerSequence);
+
+    // Get Current Turn Num
+    const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
+
+    // // Convert to number...
+    const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
+    console.log(currPlayerNum, 'currPlayerNum');
+
+    // Get Next Turn Num
+    let nextPlayerNum;
+    let nextPlayerId;
+    // if exceed num. of players means player 1 goes again
+    if (currPlayerNum + 1 > playerSequence.length) {
+      nextPlayerNum = '1';
+      const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+      const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+      nextPlayerId = nextPlayerIdArray[0];
+    } else {
+      nextPlayerNum = (currPlayerNum + 1).toString();
+      const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+      const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+      nextPlayerId = nextPlayerIdArray[0];
+    }
+    console.log(nextPlayerNum, 'nextPlayerNum -string');
+    console.log(nextPlayerId, 'nextPlayerId-integer');
+
+    // Get next player instance and send the response
+    currPlayer = await db.User.findByPk(nextPlayerId);
+
+    // // Change Player Turn by using associative method
+    // await currPlayer.addCurrentPlayerTurns(currGame);
+
+    currGame.CurrentPlayerId = nextPlayerId;
+    await currGame.save();
+  } catch (error) {
+    console.log(error);
+  }
+  return { currGame, currPlayer, message: 'update completed' };
+};
 /*
  * ========================================================
  * ========================================================
@@ -110,61 +166,6 @@ const makeDeck = function () {
  */
 
 export default function games(db) {
-// **************** Helper Functions for routers ****************
-// To get the discarded card pile as an object
-  const getDiscardedPile = (currGame) => {
-    const discardPileJSON = currGame.discardPile;
-    const discardedPile = JSON.parse(discardPileJSON);
-    return discardedPile;
-  };
-
-  // Switch player helper
-  const switchPlayerTurn = async (currGame) => {
-    try {
-      // Get Current Player ID
-      const currPlayerId = currGame.CurrentPlayerId;
-
-      // Get All player sequences
-      const playerSequence = JSON.parse(currGame.playerSequence);
-
-      // Get Current Turn Num
-      const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
-
-      // // Convert to number...
-      const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
-      console.log(currPlayerNum, 'currPlayerNum');
-
-      // Get Next Turn Num
-      let nextPlayerNum;
-      let nextPlayerId;
-      // if exceed num. of players means player 1 goes again
-      if (currPlayerNum + 1 > playerSequence.length) {
-        nextPlayerNum = '1';
-        const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-        const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-        nextPlayerId = nextPlayerIdArray[0];
-      } else {
-        nextPlayerNum = (currPlayerNum + 1).toString();
-        const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-        const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-        nextPlayerId = nextPlayerIdArray[0];
-      }
-      console.log(nextPlayerNum, 'nextPlayerNum -string');
-      console.log(nextPlayerId, 'nextPlayerId-integer');
-
-      // Get next player instance and send the response
-      const currPlayer = await db.User.findByPk(nextPlayerId);
-
-      // // Change Player Turn by using associative method
-      // await currPlayer.addCurrentPlayerTurns(currGame);
-
-      currGame.CurrentPlayerId = nextPlayerId;
-      await currGame.save();
-      return { currGame, currPlayer, message: 'update completed' };
-    } catch (error) {
-      console.log(error);
-    }
-  };
   // ************/ Route related functions ************/
   // create a new game. Insert a new row in the DB.
   const create = async (req, res) => {
@@ -300,181 +301,202 @@ export default function games(db) {
 
   // For either user to refresh the game... show the faceup cards (and the discard pile)
   const show = async (req, res) => {
+    try {
     // First, check the state of the game...
-    const currGame = await db.Game.findByPk(req.params.gameId);
+      const currGame = await db.Game.findByPk(req.params.gameId);
 
-    const currGameRoundDetails = await db.GamesUser.findAll({
-      where: {
-        GameId: req.params.gameId,
-      },
-    }, {
-      attributes: ['faceUpCards'],
-    });
-    if (currGame.gameState === 'waiting') {
-    // Retrieve usernames of each gameround entry
-      const currGameUserGameRoundsPromises = currGameRoundDetails.map((gameRound) => gameRound.getUser());
-      const currGameUserGameRoundResults = await Promise.all(currGameUserGameRoundsPromises);
-      const currGameRoundUsernames = currGameUserGameRoundResults.map((result) => result.username);
-      res.send({ currGameRoundDetails, currGameRoundUsernames, currGame });
-    } else if (currGame.gameState === 'setGame') {
-      res.redirect(`/games/${req.params.gameId}/players/${req.loggedInUserId}`);
-    } else if (currGame.gameState === 'begin') {
-      // Else find the user with the next player id
-      let currPlayer;
-      const currPlayerArray = await currGame.getUsers({
+      const currGameRoundDetails = await db.GamesUser.findAll({
         where: {
-          id: currGame.CurrentPlayerId,
+          GameId: req.params.gameId,
         },
+      }, {
+        attributes: ['faceUpCards'],
       });
-
-      // If game has been initialized, an associated currPlayer would be retrievable
-      if (currPlayerArray.length > 0) {
-        currPlayer = currPlayerArray[0];
-        // Otherwise if game has not yet been initialized
-        // We have to search the Users table through the join table as well
-      } else {
-        currPlayer = await db.User.findOne({
-          include: {
-            model: db.GamesUser,
-            where: {
-              playerNum: 1,
-              GameId: currGame.id,
-            },
+      if (currGame.gameState === 'waiting') {
+        // Retrieve usernames of each gameround entry
+        const currGameUserGameRoundsPromises = currGameRoundDetails.map((gameRound) => gameRound.getUser());
+        const currGameUserGameRoundResults = await Promise.all(currGameUserGameRoundsPromises);
+        const currGameRoundUsernames = currGameUserGameRoundResults.map((result) => result.username);
+        res.send({ currGameRoundDetails, currGameRoundUsernames, currGame });
+      } else if (currGame.gameState === 'setGame') {
+        res.redirect(`/games/${req.params.gameId}/players/${req.loggedInUserId}`);
+      } else if (currGame.gameState === 'begin') {
+      // Else find the user with the next player id
+        let currPlayer;
+        const currPlayerArray = await currGame.getUsers({
+          where: {
+            id: currGame.CurrentPlayerId,
           },
         });
-      }
 
-      // Add playerOne's Id into target table (Games)
-      await currPlayer.addCurrentPlayerTurns(currGame);
-      res.send({ currGameRoundDetails, currGame, currPlayer });
+        // If game has been initialized, an associated currPlayer would be retrievable
+        if (currPlayerArray.length > 0) {
+          currPlayer = currPlayerArray[0];
+        // Otherwise if game has not yet been initialized
+        // We have to search the Users table through the join table as well
+        } else {
+          currPlayer = await db.User.findOne({
+            include: {
+              model: db.GamesUser,
+              where: {
+                playerNum: 1,
+                GameId: currGame.id,
+              },
+            },
+          });
+        }
+
+        // Add playerOne's Id into target table (Games)
+        await currPlayer.addCurrentPlayerTurns(currGame);
+        res.send({ currGameRoundDetails, currGame, currPlayer });
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
   // Index all on-going games
   const index = async (req, res) => {
     const { loggedInUserId } = req;
-    if (req.middlewareLoggedIn === true) {
-      const allOngoingGamesArray = await db.Game.findAll({
-        where: {
-          gameState: 'waiting',
-        },
-      });
-      if (allOngoingGamesArray) {
-        res.send({ allOngoingGamesArray, loggedInUserId });
-        return;
+    try {
+      if (req.middlewareLoggedIn === true) {
+        const allOngoingGamesArray = await db.Game.findAll({
+          where: {
+            gameState: 'waiting',
+          },
+        });
+        if (allOngoingGamesArray) {
+          res.send({ allOngoingGamesArray, loggedInUserId });
+          return;
+        }
       }
+    } catch (error) {
+      console.log(error);
     }
     res.send('no ongoing games/must be loggedin');
   };
+
   // Display the inital 6 cards
   const displaySetGameHand = async (req, res) => {
-    const playerHand = await db.GamesUser.findOne({
-      where: {
-        GameId: req.params.gameId,
-        UserId: req.params.playerId,
-      },
-    });
-    const currGame = await playerHand.getGame();
-    const currGameState = currGame.gameState;
-    res.send({ playerHand, currGame, currGameState });
+    try {
+      const playerHand = await db.GamesUser.findOne({
+        where: {
+          GameId: req.params.gameId,
+          UserId: req.params.playerId,
+        },
+      });
+      const currGame = await playerHand.getGame();
+      const currGameState = currGame.gameState;
+      res.send({ playerHand, currGame, currGameState });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   // Perform update on user's cardsInHand/facedown/faceup etc cards
   //
   const updateCardsAfterSetGame = async (req, res) => {
-    const selectedCardsArray = req.body;
-    const playerHand = await db.GamesUser.findOne({
-      where: {
-        GameId: req.params.gameId,
-        UserId: req.params.playerId,
-      },
-    });
+    try {
+      const selectedCardsArray = req.body;
+      const playerHand = await db.GamesUser.findOne({
+        where: {
+          GameId: req.params.gameId,
+          UserId: req.params.playerId,
+        },
+      });
 
-    // Update the player's cardsInHand
-    const existingPlayerCardsInHand = JSON.parse(playerHand.cardsInHand);
+      // Update the player's cardsInHand
+      const existingPlayerCardsInHand = JSON.parse(playerHand.cardsInHand);
 
-    // For each of selectedCards, remove the same card in player's hand
-    selectedCardsArray.forEach((selectedCard) => {
+      // For each of selectedCards, remove the same card in player's hand
+      selectedCardsArray.forEach((selectedCard) => {
       // If the selected card is present inside the player's hand...
-      const indexOfFaceUpCard = existingPlayerCardsInHand.findIndex((card) => JSON.stringify(card) === JSON.stringify(selectedCard));
-      // We remove it
-      if (indexOfFaceUpCard > -1) {
-        existingPlayerCardsInHand.splice(indexOfFaceUpCard, 1);
-        console.log(existingPlayerCardsInHand, 'spliced hand');
+        const indexOfFaceUpCard = existingPlayerCardsInHand.findIndex((card) => JSON.stringify(card) === JSON.stringify(selectedCard));
+        // We remove it
+        if (indexOfFaceUpCard > -1) {
+          existingPlayerCardsInHand.splice(indexOfFaceUpCard, 1);
+          console.log(existingPlayerCardsInHand, 'spliced hand');
+        }
+      });
+      playerHand.cardsInHand = JSON.stringify(existingPlayerCardsInHand);
+      playerHand.changed('cardsInHand', true);
+      await playerHand.save();
+
+      // Update the player's faceUpCards
+      playerHand.faceUpCards = JSON.stringify(selectedCardsArray);
+      playerHand.changed('faceUpCards', true);
+      await playerHand.save();
+
+      // Perform check if all player's faceUpCards column have been completed
+      const allPlayerHandsArray = await db.GamesUser.findAll({
+        where: {
+          GameId: req.params.gameId,
+          faceUpCards: null,
+
+        },
+      });
+      // If so change gameState to 'start'
+      if (allPlayerHandsArray.length === 0) {
+        const currGame = await playerHand.getGame();
+        currGame.gameState = 'begin';
+        await currGame.save();
+
+        // Draw a random card from the drawPile
+        const drawPile = JSON.parse(currGame.drawPile);
+
+        // Push the top card from drawPile into the discardPile to set the game
+        const discardPile = [];
+        discardPile.push(drawPile.pop());
+
+        currGame.discardPile = JSON.stringify(discardPile);
+        currGame.changed('discardPile', true);
+
+        currGame.drawPile = JSON.stringify(drawPile);
+        currGame.changed('drawPile', true);
+
+        await currGame.save();
+
+        res.send({ setGame: 'completed', message: 'Set Game Completed' });
+        return;
       }
-    });
-    playerHand.cardsInHand = JSON.stringify(existingPlayerCardsInHand);
-    playerHand.changed('cardsInHand', true);
-    await playerHand.save();
-
-    // Update the player's faceUpCards
-    playerHand.faceUpCards = JSON.stringify(selectedCardsArray);
-    playerHand.changed('faceUpCards', true);
-    await playerHand.save();
-
-    // Perform check if all player's faceUpCards column have been completed
-    const allPlayerHandsArray = await db.GamesUser.findAll({
-      where: {
-        GameId: req.params.gameId,
-        faceUpCards: null,
-
-      },
-    });
-    // If so change gameState to 'start'
-    if (allPlayerHandsArray.length === 0) {
-      const currGame = await playerHand.getGame();
-      currGame.gameState = 'begin';
-      await currGame.save();
-
-      // Draw a random card from the drawPile
-      const drawPile = JSON.parse(currGame.drawPile);
-
-      // Push the top card from drawPile into the discardPile to set the game
-      const discardPile = [];
-      discardPile.push(drawPile.pop());
-
-      currGame.discardPile = JSON.stringify(discardPile);
-      currGame.changed('discardPile', true);
-
-      currGame.drawPile = JSON.stringify(drawPile);
-      currGame.changed('drawPile', true);
-
-      await currGame.save();
-
-      res.send({ setGame: 'completed', message: 'Set Game Completed' });
-      return;
+    } catch (error) {
+      console.log(error);
     }
     res.send({ setGame: 'in-process', message: 'Update operation complete' });
   };
 
   // Inserts a new entry into GamesUser table when a new user joins
   const join = async (req, res) => {
+    try {
     // First, find if the user has joined this room before
-    const currentPlayerEntry = await db.GamesUser.findOne({
-      where: {
-        GameId: req.params.gameId,
-        UserId: req.params.playerId,
-      },
-    });
-
-    // Retrieve the currentGame instance to be sent back to browser
-    // cannot use associative method because upon the first joining, the non-creator
-    // player has not been created yet
-
-    const currentGame = await db.Game.findByPk(req.params.gameId);
-
-    if (!currentPlayerEntry) {
-    // If user has never joined the game before create a new entry for player
-      await db.GamesUser.create(
-        {
+      const currentPlayerEntry = await db.GamesUser.findOne({
+        where: {
           GameId: req.params.gameId,
           UserId: req.params.playerId,
         },
-      );
-      res.send({ currentGame, message: 'new user has joined the game' });
-      return;
+      });
+
+      // Retrieve the currentGame instance to be sent back to browser
+      // cannot use associative method because upon the first joining, the non-creator
+      // player has not been created yet
+
+      const currentGame = await db.Game.findByPk(req.params.gameId);
+
+      if (!currentPlayerEntry) {
+        // If user has never joined the game before create a new entry for player
+        await db.GamesUser.create(
+          {
+            GameId: req.params.gameId,
+            UserId: req.params.playerId,
+          },
+        );
+        res.send({ currentGame, message: 'new user has joined the game' });
+        return;
+      }
+      res.send({ currentGame, message: 'user has joined the game before' });
+    } catch (error) {
+      console.log(error);
     }
-    res.send({ currentGame, message: 'user has joined the game before' });
   };
 
   const play = async (req, res) => {
@@ -628,7 +650,7 @@ export default function games(db) {
       // we switch players
       if (positionOfCardsPlayedArray.length > 0) {
         if (cardsInHand[positionOfCardsPlayedArray[0]].rank !== 10 && isFourOfAKindPlayed === false) {
-          const result = await switchPlayerTurn(currGame);
+          const result = await switchPlayerTurn(currGame, db);
           res.send(result);
           return;
         }
@@ -640,7 +662,7 @@ export default function games(db) {
 
       // If player couldn't play a card - switch turns
       if (positionOfCardsPlayedArray.length === 0) {
-        const result = await switchPlayerTurn(currGame);
+        const result = await switchPlayerTurn(currGame, db);
         res.send(result);
         return;
       }
