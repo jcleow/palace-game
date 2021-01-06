@@ -247,10 +247,12 @@ const displayTableTopAndBtns = () => {
         });
         // Else it is not the loggedInUser's turn, disable the play button
       } else {
-        const playBtn = document.querySelector('#play-btn');
-        if (playBtn) {
-          playBtn.disabled = true;
+        const playBtnContainer = document.querySelector('.play-button-container');
+        let playBtn = document.querySelector('#play-btn');
+        if (!playBtn) {
+          playBtn = createPlayBtn(playBtnContainer);
         }
+        playBtn.disabled = true;
       }
     });
 };
