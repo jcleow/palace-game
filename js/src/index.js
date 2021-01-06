@@ -3,10 +3,10 @@ import './styles.scss';
 
 // Import Helper Functions
 import {
-  createStartBtn, createRefreshBtn, createUserIdLabelAndLogOutBtnDisplay, updateUsersJoinedDiv,
+  createStartBtn, createRefreshBtn,
 } from './lib/helperFn.js';
-
-import createLoginForm from './lib/createLoginFormFn.js';
+import { createLoginForm, createUserIdLabelAndLogOutBtnDisplay } from './lib/createLoginFormFn.js';
+import { updateUsersJoinedDiv } from './lib/updateHeaderDivFn.js';
 
 // get the gameInterface div
 const gameInterface = document.querySelector('#game-interface');

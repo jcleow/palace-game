@@ -1,7 +1,7 @@
 import axios from 'axios';
-
+import createUserIdAndLogOutBtnDisplay from './helperFn.js';
 // createLoginForm function
-const createLoginForm = (loginContainer) => {
+export default (loginContainer) => {
   const loginFormDiv = document.createElement('div');
 
   const usernameLabel = document.createElement('label');
@@ -53,7 +53,7 @@ const createLoginForm = (loginContainer) => {
           loginContainer.removeChild(loginFormDiv);
 
           // Add the display of user id and a logout button
-          createUserIdLabelAndLogOutBtnDisplay(loginContainer, response);
+          createUserIdAndLogOutBtnDisplay(loginContainer, response);
         } else {
           const errorMessage = document.createElement('label');
           errorMessage.innerHTML = 'Your username and/or password is incorrect';
@@ -84,33 +84,3 @@ const createLoginForm = (loginContainer) => {
   loginBtn.addEventListener('click', validateLogin);
   registerBtn.addEventListener('click', registerNewUser);
 };
-
-const createUserIdLabelAndLogOutBtnDisplay = (parentNode, response) => {
-  // Create the userId display and logout btn
-  const userIdLabel = document.createElement('label');
-  userIdLabel.innerHTML = `Logged On User Id is ${response.data.loggedInUserId}`;
-  const logoutBtn = document.createElement('button');
-  logoutBtn.innerHTML = 'logout';
-
-  // If the user chooses to log out...
-  logoutBtn.addEventListener('click', () => {
-    axios.put('/user/logout')
-      .then((logoutResponse) => {
-        console.log(logoutResponse);
-        // Query for the login container
-        const loginContainer = document.querySelector('#login-container');
-
-        // Remove userId-label and logout btn
-        loginContainer.removeChild(userIdLabel);
-        loginContainer.removeChild(logoutBtn);
-
-        // Re-create login form
-        createLoginForm(loginContainer);
-      })
-      .catch((error) => { console.log(error); });
-  });
-  parentNode.appendChild(userIdLabel);
-  parentNode.appendChild(logoutBtn);
-};
-
-export { createLoginForm, createUserIdLabelAndLogOutBtnDisplay };

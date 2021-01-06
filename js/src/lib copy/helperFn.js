@@ -1,8 +1,6 @@
 import axios from 'axios';
-import { updateUsersJoinedDiv, updatePlayerActionDiv } from './updateHeaderDivFn.js';
-import {
-  renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand,
-} from './renderCards.js';
+import createLoginForm from './createLoginFormFn.js';
+
 // Function that generates the path to each individual card
 const getCardPicUrl = (card) => {
   let imgSrc = '';
@@ -22,6 +20,69 @@ const getCardPicUrl = (card) => {
   return imgSrc;
 };
 
+// Update in header div which players have joined
+const updateUsersJoinedDiv = (currGameRoundUsernames) => {
+  const headerDiv = document.querySelector('.header-div');
+  headerDiv.innerHTML = '';
+  currGameRoundUsernames.forEach((username) => {
+    headerDiv.innerText += `${username} has joined the game \n`;
+  });
+};
+// Update in header which player's turn it is with player's username
+const updatePlayerActionDiv = (currPlayer) => {
+  const headerDiv = document.querySelector('.header-div');
+  headerDiv.innerText = `It's ${currPlayer.username}'s turn`;
+};
+
+const createUserIdLabelAndLogOutBtnDisplay = (parentNode, response) => {
+  // Create the userId display and logout btn
+  const userIdLabel = document.createElement('label');
+  userIdLabel.innerHTML = `Logged On User Id is ${response.data.loggedInUserId}`;
+  const logoutBtn = document.createElement('button');
+  logoutBtn.innerHTML = 'logout';
+
+  // If the user chooses to log out...
+  logoutBtn.addEventListener('click', () => {
+    axios.put('/user/logout')
+      .then((logoutResponse) => {
+        console.log(logoutResponse);
+        // Query for the login container
+        const loginContainer = document.querySelector('#login-container');
+
+        // Remove userId-label and logout btn
+        loginContainer.removeChild(userIdLabel);
+        loginContainer.removeChild(logoutBtn);
+
+        // Re-create login form
+        createLoginForm(loginContainer);
+      })
+      .catch((error) => { console.log(error); });
+  });
+  parentNode.appendChild(userIdLabel);
+  parentNode.appendChild(logoutBtn);
+};
+// Helper that renders face up cards
+const renderFaceUpCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  JSON.parse(selectedPlayerHandArray[0].faceUpCards).forEach((faceUpCard) => {
+    const cardImg = document.createElement('img');
+    cardImg.src = getCardPicUrl(faceUpCard);
+    cardImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(cardImg);
+  });
+};
+const renderFaceDownCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  JSON.parse(selectedPlayerHandArray[0].faceDownCards).forEach((faceUpCard) => {
+    const cardImg = document.createElement('img');
+    cardImg.src = '/cardPictures/COVER-CARD.png';
+    cardImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(cardImg);
+  });
+};
+
 const renderCardsInHand = (selectedCardsPositionArray, selectedPlayerHandArray,
   selectedDivToAppendTo, selectedCardsArray, topDiscardedCard) => {
   // Clear everything in the existing div and re-add in new cards
@@ -31,9 +92,45 @@ const renderCardsInHand = (selectedCardsPositionArray, selectedPlayerHandArray,
     cardImg.src = getCardPicUrl(faceUpCard);
     cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
+
     const cardIndex = index;
+
     cardImg.addEventListener('click', () => selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, faceUpCard, topDiscardedCard));
   });
+};
+
+const renderOpponentHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard) => {
+    const cardImg = document.createElement('img');
+    cardImg.src = '/cardPictures/COVER-CARD.png';
+    cardImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(cardImg);
+  });
+};
+
+const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) => {
+  // Clear everything in the existing div and re-add in new cards
+  selectedDivToAppendTo.innerHTML = '';
+  // Rendering draw pile picture (if it still exists)
+  const drawPileArray = JSON.parse(drawPileJSON);
+  if (drawPileArray[0] !== null) {
+    const drawPileImg = document.createElement('img');
+    drawPileImg.src = '/cardPictures/COVER-CARD.png';
+    drawPileImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(drawPileImg);
+  }
+
+  // Rendering discard pile picture if it is more than 1
+  const discardPileArray = JSON.parse(discardPileJSON);
+  console.log(discardPileArray, 'discardPileArray');
+  if (discardPileArray.length > 0) {
+    const discardedCardImg = document.createElement('img');
+    discardedCardImg.src = getCardPicUrl(discardPileArray[discardPileArray.length - 1]);
+    discardedCardImg.classList.add('card-pic');
+    selectedDivToAppendTo.appendChild(discardedCardImg);
+  }
 };
 
 // Create a play button to submit cards
@@ -321,6 +418,15 @@ const createStartBtn = () => {
   return startBtn;
 };
 
+// Create a Start Button
+const createDealBtn = () => {
+  const dealBtn = document.createElement('button');
+  dealBtn.innerText = 'Deal';
+  dealBtn.setAttribute('id', 'deal-btn');
+  dealBtn.addEventListener('click', dealCards);
+  return dealBtn;
+};
+
 // Create a refresh button
 const createRefreshBtn = () => {
   const refreshBtn = document.createElement('button');
@@ -331,11 +437,13 @@ const createRefreshBtn = () => {
 };
 
 export {
-  getCardPicUrl,
-  renderCardsInHand,
-  selectCardsToPlay,
+  getCardPicUrl, updateUsersJoinedDiv,
+  updatePlayerActionDiv, createUserIdLabelAndLogOutBtnDisplay,
+  renderFaceUpCards, renderFaceDownCards,
+  renderCardsInHand, renderOpponentHand,
+  renderMiscCards, selectCardsToPlay,
   displaySetGameCardPicsAndBtn, displayTableTopAndBtns,
   setGame,
   refreshGameInfo, createStartBtn,
-  createRefreshBtn,
+  createDealBtn, createRefreshBtn,
 };
