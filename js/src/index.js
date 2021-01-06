@@ -7,7 +7,7 @@ import {
 } from './lib/gameExecutionLogic.js';
 import { createLoginForm, createUserIdLabelAndLogOutBtnDisplay } from './lib/createLoginFormFn.js';
 import { updateUsersJoinedDiv } from './lib/updateHeaderDivFn.js';
-import { createNewGameBtn } from './lib/buttonCreation.js';
+import { createNewGameBtn } from './lib/buttonCreationFn.js';
 
 // get the gameInterface div
 const gameInterface = document.querySelector('#game-interface');
@@ -17,7 +17,7 @@ const gameButtonsDiv = document.querySelector('.game-buttons');
 const loginContainer = document.querySelector('#login-container');
 
 // Function that creates a new game
-const createGame = function () {
+const createGame = () => {
   gameInterface.removeChild(gameButtonsDiv);
   // Display Waiting for players
   const headerDiv = document.querySelector('.header-div');

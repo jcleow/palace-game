@@ -62,16 +62,34 @@ const selectCardsToPlay = (selectedCardsPositionArray, selectedCardsArray, cardI
   return selectedCardsPositionArray;
 };
 
-const renderFaceUpCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+const renderFaceUpCards = (selectedPlayerHandArray,
+  selectedDivToAppendTo, selectedCardsArray,
+  selectedCardsPositionArray, topDiscardedCard, drawPile) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
-  JSON.parse(selectedPlayerHandArray[0].faceUpCards).forEach((faceUpCard) => {
+  JSON.parse(selectedPlayerHandArray[0].faceUpCards).forEach((faceUpCard, faceUpCardIndex) => {
     const cardImg = document.createElement('img');
     cardImg.src = getCardPicUrl(faceUpCard);
     cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
+    console.log(drawPile, 'drawPile-1');
+    console.log(selectedPlayerHandArray[0].cardsInHand, 'cardsInHand-1');
+    console.log(selectedPlayerHandArray[0].cardsInHand.length, 'cardsInHand-2');
+
+    // If draw pile is defined means we are checking if loggedInPlayer can use face up cards
+    if (drawPile) {
+    // If drawPile and selectedPlayerHandArray is empty, activate Face up cards
+      if (drawPile.length === 0 && selectedPlayerHandArray[0].cardsInHand.length === 0) {
+        console.log('eventListeners Added');
+        cardImg.addEventListener('click', () => {
+          selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray,
+            faceUpCardIndex, cardImg, faceUpCard, topDiscardedCard);
+        });
+      }
+    }
   });
 };
+
 const renderFaceDownCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
@@ -83,12 +101,11 @@ const renderFaceDownCards = (selectedPlayerHandArray, selectedDivToAppendTo) => 
   });
 };
 
-const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) => {
+const renderMiscCards = (drawPile, discardPile, selectedDivToAppendTo) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
   // Rendering draw pile picture (if it still exists)
-  const drawPileArray = JSON.parse(drawPileJSON);
-  if (drawPileArray[0] !== null) {
+  if (drawPile.length > 0) {
     const drawPileImg = document.createElement('img');
     drawPileImg.src = '/cardPictures/COVER-CARD.png';
     drawPileImg.classList.add('card-pic');
@@ -96,11 +113,10 @@ const renderMiscCards = (drawPileJSON, discardPileJSON, selectedDivToAppendTo) =
   }
 
   // Rendering discard pile picture if it is more than 1
-  const discardPileArray = JSON.parse(discardPileJSON);
-  console.log(discardPileArray, 'discardPileArray');
-  if (discardPileArray.length > 0) {
+  console.log(discardPile, 'discardPileArray');
+  if (discardPile.length > 0) {
     const discardedCardImg = document.createElement('img');
-    discardedCardImg.src = getCardPicUrl(discardPileArray[discardPileArray.length - 1]);
+    discardedCardImg.src = getCardPicUrl(discardPile[discardPile.length - 1]);
     discardedCardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(discardedCardImg);
   }
@@ -117,17 +133,16 @@ const renderOpponentHand = (selectedPlayerHandArray, selectedDivToAppendTo) => {
   });
 };
 
-const renderCardsInHand = (selectedCardsPositionArray, selectedPlayerHandArray,
-  selectedDivToAppendTo, selectedCardsArray, topDiscardedCard) => {
+const renderCardsInHand = (selectedPlayerHandArray,
+  selectedDivToAppendTo, selectedCardsArray, selectedCardsPositionArray, topDiscardedCard) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
-  JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((faceUpCard, index) => {
+  JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((cardInHand, cardIndex) => {
     const cardImg = document.createElement('img');
-    cardImg.src = getCardPicUrl(faceUpCard);
+    cardImg.src = getCardPicUrl(cardInHand);
     cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
-    const cardIndex = index;
-    cardImg.addEventListener('click', () => selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, faceUpCard, topDiscardedCard));
+    cardImg.addEventListener('click', () => selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, cardInHand, topDiscardedCard));
   });
 };
 

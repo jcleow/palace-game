@@ -2,8 +2,8 @@ import axios from 'axios';
 import { updateUsersJoinedDiv, updatePlayerActionDiv } from './updateHeaderDivFn.js';
 import {
   renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand,
-} from './renderCards.js';
-import { createPlayBtn } from './buttonCreation.js';
+} from './renderCardsFn.js';
+import { createPlayBtn } from './buttonCreationFn.js';
 import getCardPicUrl from './getCardPicUrlFn.js';
 // ************ Business Logic ***********//
 
@@ -40,10 +40,12 @@ const displayTableTopAndBtns = () => {
   // get all the faceUpCards from database and create it here
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
+      console.log(response.data, 'response-data');
       // someFunction(response);
 
       // Classify the response data round details into
       // either logged-in player array or opponent hand array
+      // Type array as it might be easier to track more than 2 players for opponent hands
       const loggedInPlayerHands = [];
       const opponentHands = [];
       response.data.currGameRoundDetails.forEach((gameRound) => {
@@ -57,11 +59,15 @@ const displayTableTopAndBtns = () => {
       // Obtain the currGame discard and draw pile data
       const { currGame } = response.data;
       const { drawPile: drawPileJSON, discardPile: discardPileJSON } = currGame;
-      // Get the most recently discarded card
+      const drawPile = JSON.parse(drawPileJSON);
+      console.log(drawPile, 'drawPile');
       const discardPile = JSON.parse(discardPileJSON);
+      console.log(discardPile, 'discardPile');
+
+      // Get the most recently discarded card
       let topDiscardedCard;
       if (discardPile !== null) {
-        topDiscardedCard = discardPile.pop();
+        topDiscardedCard = discardPile[discardPile.length - 1];
       }
 
       // Query for all the relevant card divs on the table top
@@ -70,29 +76,48 @@ const displayTableTopAndBtns = () => {
         opponentHandDiv, loggedInPlayerFaceDownDiv, opponentFaceDownDiv, centerMiscCardsDiv,
       } = getAllCardDivs();
 
+      // Keep track of loggedInUser's selected cardsInHand to play
+      const selectedCardsInHandArray = [];
+      // Keep track of the position of loggedInUser's selected cardsInHand to play
+      const selectedCardsInHandPositionArray = [];
+
+      // Keep track of loggedInUser's selected FaceUpCards to play
+      const selectedFaceUpCardsArray = [];
+      // Keep track of the position of loggedInUser's selected FaceUpCards to play
+      const selectedFaceUpCardsPositionArray = [];
+
+      // Keep track of loggedInUser's selected FaceDownCards to play
+      const selectedFaceDownCardsArray = [];
+      // Keep track of the position of loggedInUser's selected FaceDownCards to play
+      const selectedFaceDownCardsPositionArray = [];
+
       // Render opponent player's private hand
       renderOpponentHand(opponentHands, opponentHandDiv);
+
       // Render opponent player's face up cards
       renderFaceUpCards(opponentHands, opponentFaceUpDiv);
+
       // Render opponent's face down cards
       renderFaceDownCards(opponentHands, opponentFaceDownDiv);
-      // Render logged-in player's face up cards
-      renderFaceUpCards(loggedInPlayerHands, loggedInPlayerFaceUpDiv);
-      // Render logged-in player's face down cards
-      renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv);
-      // Render draw pile and discard pile
-      renderMiscCards(drawPileJSON, discardPileJSON, centerMiscCardsDiv);
 
-      // Keep track of selected cards for play
-      const selectedCardsArray = [];
-      // Keep track of the selected cards indices to play
-      const selectedCardsPositionArray = [];
+      // Render logged-in player's face up cards
+      renderFaceUpCards(loggedInPlayerHands, loggedInPlayerFaceUpDiv,
+        selectedFaceUpCardsArray, selectedFaceUpCardsPositionArray,
+        topDiscardedCard, drawPile);
+
+      // Render logged-in player's face down cards
+      renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv,
+        selectedFaceDownCardsArray, selectedFaceDownCardsPositionArray,
+        topDiscardedCard, drawPile);
 
       // Render logged-in player's private hand complete with client-side validation
       // of cards to play
-      renderCardsInHand(selectedCardsPositionArray, loggedInPlayerHands,
-        privateHandDiv, selectedCardsArray, topDiscardedCard);
-      console.log(selectedCardsPositionArray, 'selected positions array');
+      renderCardsInHand(loggedInPlayerHands, privateHandDiv,
+        selectedCardsInHandArray, selectedCardsInHandPositionArray, topDiscardedCard);
+      console.log(selectedCardsInHandPositionArray, 'selected positions array');
+
+      // Render draw pile and discard pile
+      renderMiscCards(drawPile, discardPile, centerMiscCardsDiv);
 
       if (currGame.CurrentPlayerId === loggedInUserId) {
         console.log('reached here');
@@ -103,7 +128,7 @@ const displayTableTopAndBtns = () => {
 
         playBtn.addEventListener('click', () => {
           console.log('clicked once');
-          axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`, selectedCardsPositionArray)
+          axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`, selectedCardsInHandPositionArray)
             .then((playCardsResponse) => {
               currentGame = playCardsResponse.data.currGame;
               refreshGameInfo();
