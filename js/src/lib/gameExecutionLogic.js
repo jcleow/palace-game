@@ -124,13 +124,11 @@ const displayTableTopAndBtns = () => {
         topDiscardedCard = discardPile.pop();
       }
 
-      const loggedInPlayerFaceUpDiv = document.querySelector('.logged-in-player-face-up-cards ');
-      const opponentFaceUpDiv = document.querySelector('.opponent-face-up-cards');
-      const privateHandDiv = document.querySelector('.logged-in-player-private-hand');
-      const opponentHandDiv = document.querySelector('.opponent-private-hand');
-      const loggedInPlayerFaceDownDiv = document.querySelector('.logged-in-player-face-down-cards');
-      const opponentFaceDownDiv = document.querySelector('.opponent-face-down-cards');
-      const centerMiscCardsDiv = document.querySelector('.center-misc-cards');
+      // Query for all the relevant card divs on the table top
+      const {
+        loggedInPlayerFaceUpDiv, opponentFaceUpDiv, privateHandDiv,
+        opponentHandDiv, loggedInPlayerFaceDownDiv, opponentFaceDownDiv, centerMiscCardsDiv,
+      } = getAllCardDivs();
 
       // Render opponent player's private hand
       renderOpponentHand(opponentHands, opponentHandDiv);
@@ -142,6 +140,12 @@ const displayTableTopAndBtns = () => {
       // Render logged-in player's face up cards
       renderFaceUpCards(loggedInPlayerHands, loggedInPlayerFaceUpDiv);
 
+      // Render logged-in player's face down cards
+      renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv);
+      // Render draw pile and discard pile
+      renderMiscCards(drawPileJSON, discardPileJSON, centerMiscCardsDiv);
+      // If it is loggedInUser's turn surface the [Play] button
+
       // Keep track of selected cards for play
       const selectedCardsArray = [];
       // Keep track of the selected cards indices to play
@@ -152,11 +156,7 @@ const displayTableTopAndBtns = () => {
       renderCardsInHand(selectedCardsPositionArray, loggedInPlayerHands,
         privateHandDiv, selectedCardsArray, topDiscardedCard);
       console.log(selectedCardsPositionArray, 'selected positions array');
-      // Render logged-in player's face down cards
-      renderFaceDownCards(loggedInPlayerHands, loggedInPlayerFaceDownDiv);
-      // Render draw pile and discard pile
-      renderMiscCards(drawPileJSON, discardPileJSON, centerMiscCardsDiv);
-      // If it is loggedInUser's turn surface the [Play] button
+
       if (currGame.CurrentPlayerId === loggedInUserId) {
         console.log('reached here');
         // removes the playbtn if already created
@@ -304,6 +304,20 @@ const createRefreshBtn = () => {
   refreshBtn.setAttribute('id', 'refresh-btn');
   refreshBtn.addEventListener('click', refreshGameInfo);
   return refreshBtn;
+};
+
+// Function that queries for all the relevant card divs on the table top
+const getAllCardDivs = () => {
+  const loggedInPlayerFaceUpDiv = document.querySelector('.logged-in-player-face-up-cards ');
+  const opponentFaceUpDiv = document.querySelector('.opponent-face-up-cards');
+  const privateHandDiv = document.querySelector('.logged-in-player-private-hand');
+  const opponentHandDiv = document.querySelector('.opponent-private-hand');
+  const loggedInPlayerFaceDownDiv = document.querySelector('.logged-in-player-face-down-cards');
+  const opponentFaceDownDiv = document.querySelector('.opponent-face-down-cards');
+  const centerMiscCardsDiv = document.querySelector('.center-misc-cards');
+  return {
+    loggedInPlayerFaceUpDiv, opponentFaceUpDiv, privateHandDiv, opponentHandDiv, loggedInPlayerFaceDownDiv, opponentFaceDownDiv, centerMiscCardsDiv,
+  };
 };
 
 export {
