@@ -80,16 +80,19 @@ const displayTableTopAndBtns = () => {
       const selectedCardsInHandArray = [];
       // Keep track of the position of loggedInUser's selected cardsInHand to play
       const selectedCardsInHandPositionArray = [];
+      console.log(selectedCardsInHandPositionArray, 'cards in hand pos array');
 
       // Keep track of loggedInUser's selected FaceUpCards to play
       const selectedFaceUpCardsArray = [];
       // Keep track of the position of loggedInUser's selected FaceUpCards to play
       const selectedFaceUpCardsPositionArray = [];
+      console.log(selectedFaceUpCardsPositionArray, 'face up cards pos array');
 
       // Keep track of loggedInUser's selected FaceDownCards to play
       const selectedFaceDownCardsArray = [];
       // Keep track of the position of loggedInUser's selected FaceDownCards to play
       const selectedFaceDownCardsPositionArray = [];
+      console.log(selectedFaceDownCardsPositionArray, 'face down cards pos array');
 
       // Render opponent player's private hand
       renderOpponentHand(opponentHands, opponentHandDiv);
@@ -114,10 +117,30 @@ const displayTableTopAndBtns = () => {
       // of cards to play
       renderCardsInHand(loggedInPlayerHands, privateHandDiv,
         selectedCardsInHandArray, selectedCardsInHandPositionArray, topDiscardedCard);
-      console.log(selectedCardsInHandPositionArray, 'selected positions array');
 
       // Render draw pile and discard pile
       renderMiscCards(drawPile, discardPile, centerMiscCardsDiv);
+
+      // Since user can choose to play either cardsInHand, faceUpCards, faceDownCards
+      // we need to distinguish which cards to send to the server
+      let selectedCardsPlayedPositionArray;
+      let typeOfCards;
+      console.log(selectedCardsInHandPositionArray, 'selectedCardsInHandPosArray');
+      console.log(selectedCardsInHandPositionArray.length, 'length');
+      if (selectedCardsInHandPositionArray.length > 0) {
+        selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
+        typeOfCards = 'cardsInHand';
+      } else if (selectedFaceUpCardsPositionArray.length > 0) {
+        selectedCardsPlayedPositionArray = selectedFaceUpCardsPositionArray;
+        typeOfCards = 'faceUpCards';
+      } else if (selectedFaceDownCardsPositionArray.length > 0) {
+        selectedCardsPlayedPositionArray = selectedFaceDownCardsPositionArray;
+        typeOfCards = 'faceDownCards';
+      } else {
+        selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
+        typeOfCards = 'cardsInHand';
+      }
+      console.log(selectedCardsPlayedPositionArray, 'selectedCardsPlayed position array');
 
       if (currGame.CurrentPlayerId === loggedInUserId) {
         console.log('reached here');
@@ -128,7 +151,10 @@ const displayTableTopAndBtns = () => {
 
         playBtn.addEventListener('click', () => {
           console.log('clicked once');
-          axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`, selectedCardsInHandPositionArray)
+          console.log(selectedCardsInHandPositionArray, 'selected position array');
+
+          axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`,
+            selectedCardsPlayedPositionArray)
             .then((playCardsResponse) => {
               currentGame = playCardsResponse.data.currGame;
               refreshGameInfo();

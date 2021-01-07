@@ -57,9 +57,6 @@ const selectCardsToPlay = (selectedCardsPositionArray, selectedCardsArray, cardI
     selectedCardsArray.splice(selectedCardsArray.indexOf(card), 1);
     selectedCardsPositionArray.splice(selectedCardsPositionArray.indexOf(cardIndex), 1);
   }
-  console.log(selectedCardsArray, 'selectedCards');
-  console.log(selectedCardsPositionArray, 'selectedPositions');
-  return selectedCardsPositionArray;
 };
 
 const renderFaceUpCards = (selectedPlayerHandArray,
@@ -75,9 +72,6 @@ const renderFaceUpCards = (selectedPlayerHandArray,
     cardImg.src = getCardPicUrl(faceUpCard);
     cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
-    console.log(drawPile, 'drawPile-1');
-    console.log(cardsInHand, 'cardsInHand-122');
-    console.log(cardsInHand.length, 'cardsInHand-244');
 
     // If draw pile is defined means we are checking if loggedInPlayer can use face up cards
     if (drawPile) {
