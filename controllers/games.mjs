@@ -643,15 +643,18 @@ export default function games(db) {
         // Special case if a face down card is played and is smaller than the top
         // discarded pile && it has not been removed by wildcard 10 or 4 of a kind
         if (isFaceDownCardSmallerThanTopDiscardedCard && discardPile.length > 0) {
-          updatedCardsInHand = discardPile;
+          console.log(discardPile, 'discardPile-facedown');
+          // Perform a deep copy of the existing discardPile...
+          updatedCardsInHand = JSON.parse(JSON.stringify(discardPile));
+          // Before erasing the contents inside discardPile
           discardPile.length = 0;
           console.log('all facedown cards & discardPile cards are pushed into user\'s hand');
+          console.log(updatedCardsInHand, 'deepcopy');
         }
 
         // Remove the played cards from the type of hand
         if (cardType === 'cardsInHand') {
           updatedCardsInHand = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
-          console.log(updatedCardsInHand, 'updatedCardsInHand');
         } else if (cardType === 'faceUpCards') {
           updatedFaceUpCards = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
         } else if (cardType === 'faceDownCards') {
