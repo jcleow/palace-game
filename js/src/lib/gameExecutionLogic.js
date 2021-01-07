@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { updateUsersJoinedDiv, updatePlayerActionDiv } from './updateHeaderDivFn.js';
+import { updateUsersJoinedDiv, updatePlayerActionDiv, updateGameOverDiv } from './updateHeaderDivFn.js';
 import {
   renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand,
 } from './renderCardsFn.js';
@@ -20,12 +20,17 @@ const refreshGameInfo = () => {
       } else if (currGameState === 'setGame') {
         displaySetGameCardPicsAndBtn(response);
         console.log('gameIsRefreshed-setgame-state');
-      } else if (currGameState === 'begin') {
+      } else if (currGameState === 'ongoing') {
         // Update to see who is the current user(name) to play
         updatePlayerActionDiv(currPlayer);
         // Display all the cards on the table as well as cards in each player's hand
         displayTableTopAndBtns();
         console.log('gameIsRefreshed-begin-state!!');
+      } else if (currGameState === 'gameOver') {
+        // Display all the cards on the table as well as cards in each player's hand
+        displayTableTopAndBtns();
+        const { winner } = response.data;
+        updateGameOverDiv(winner);
       }
     })
     .catch((error) => {

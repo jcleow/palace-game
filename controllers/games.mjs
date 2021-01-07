@@ -304,7 +304,6 @@ export default function games(db) {
     try {
     // First, check the state of the game...
       const currGame = await db.Game.findByPk(req.params.gameId);
-
       const currGameRoundDetails = await db.GamesUser.findAll({
         where: {
           GameId: req.params.gameId,
@@ -320,7 +319,7 @@ export default function games(db) {
         res.send({ currGameRoundDetails, currGameRoundUsernames, currGame });
       } else if (currGame.gameState === 'setGame') {
         res.redirect(`/games/${req.params.gameId}/players/${req.loggedInUserId}`);
-      } else if (currGame.gameState === 'begin') {
+      } else if (currGame.gameState === 'ongoing') {
       // Else find the user with the next player id
         let currPlayer;
         const currPlayerArray = await currGame.getUsers({
@@ -345,10 +344,12 @@ export default function games(db) {
             },
           });
         }
-
         // Add playerOne's Id into target table (Games)
         await currPlayer.addCurrentPlayerTurns(currGame);
         res.send({ currGameRoundDetails, currGame, currPlayer });
+      } else if (currGame.gameState === 'gameOver') {
+        const winner = await currGame.getWinner();
+        res.send({ currGameRoundDetails, currGame, winner });
       }
     } catch (error) {
       console.log(error);
@@ -435,10 +436,10 @@ export default function games(db) {
 
         },
       });
-      // If so change gameState to 'start'
+      // If so change gameState to 'ongoing'
       if (allPlayerHandsArray.length === 0) {
         const currGame = await playerHand.getGame();
-        currGame.gameState = 'begin';
+        currGame.gameState = 'ongoing';
         await currGame.save();
 
         // Draw a random card from the drawPile
@@ -699,6 +700,25 @@ export default function games(db) {
       }
 
       await currUserGameRound[0].save();
+
+      // Check If Game is Won by making sure all there are no cards left
+
+      if (updatedCardsInHand.length === 0
+        && updatedFaceUpCards.length === 0
+        && updatedFaceDownCards.length === 0) {
+        // Add winner's id to the current game
+        const winner = await currUserGameRound[0].getUser();
+        await winner.addWins(currGame);
+
+        // Change game state to gameOver
+        currGame.gameState = 'gameOver';
+        await currGame.save();
+
+        // Send response
+        res.send({
+          currGame, winner, message: 'gameOver',
+        });
+      }
 
       // *********** Switch Player Turn Logic ************//
       // When cards other than 10 is played, and 4 of a kind is NOT played consecutively

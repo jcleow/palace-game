@@ -12,4 +12,9 @@ const updatePlayerActionDiv = (currPlayer) => {
   headerDiv.innerText = `It's ${currPlayer.username}'s turn`;
 };
 
-export { updateUsersJoinedDiv, updatePlayerActionDiv };
+const updateGameOverDiv = (winner) => {
+  const headerDiv = document.querySelector('.header-div');
+  headerDiv.innerText = `${winner.username} is the winner!`;
+};
+
+export { updateUsersJoinedDiv, updatePlayerActionDiv, updateGameOverDiv };

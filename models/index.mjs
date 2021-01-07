@@ -51,7 +51,7 @@ db.GamesUser.belongsTo(db.User);
 
 // Creating another association between User and Game through alias of 'Wins'
 db.User.hasMany(db.Game, { as: 'Wins', foreignKey: 'WinnerId' });
-
+db.Game.belongsTo(db.User, { as: 'Winner', foreignKey: 'WinnerId' });
 // Creating another association between User and Game through alias of 'CurrentPlayerTurn'
 db.User.hasMany(db.Game, { as: 'CurrentPlayerTurns', foreignKey: 'CurrentPlayerId' });
 
