@@ -124,21 +124,21 @@ const displayTableTopAndBtns = () => {
       // Since user can choose to play either cardsInHand, faceUpCards, faceDownCards
       // we need to distinguish which cards to send to the server
       let selectedCardsPlayedPositionArray;
-      let typeOfCards;
+      let cardType;
       console.log(selectedCardsInHandPositionArray, 'selectedCardsInHandPosArray');
       console.log(selectedCardsInHandPositionArray.length, 'length');
       if (selectedCardsInHandPositionArray.length > 0) {
         selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
-        typeOfCards = 'cardsInHand';
+        cardType = 'cardsInHand';
       } else if (selectedFaceUpCardsPositionArray.length > 0) {
         selectedCardsPlayedPositionArray = selectedFaceUpCardsPositionArray;
-        typeOfCards = 'faceUpCards';
+        cardType = 'faceUpCards';
       } else if (selectedFaceDownCardsPositionArray.length > 0) {
         selectedCardsPlayedPositionArray = selectedFaceDownCardsPositionArray;
-        typeOfCards = 'faceDownCards';
+        cardType = 'faceDownCards';
       } else {
         selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
-        typeOfCards = 'cardsInHand';
+        cardType = 'cardsInHand';
       }
       console.log(selectedCardsPlayedPositionArray, 'selectedCardsPlayed position array');
 
@@ -154,7 +154,7 @@ const displayTableTopAndBtns = () => {
           console.log(selectedCardsInHandPositionArray, 'selected position array');
 
           axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`,
-            selectedCardsPlayedPositionArray)
+            { selectedCardsPlayedPositionArray, cardType })
             .then((playCardsResponse) => {
               currentGame = playCardsResponse.data.currGame;
               refreshGameInfo();

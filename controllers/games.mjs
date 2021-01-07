@@ -506,7 +506,7 @@ export default function games(db) {
       // This refers to the positions of the cards
       // that were selected for play, stored in an array
       console.log(req.body, 'req-body');
-      const positionOfCardsPlayedArray = req.body;
+      const { selectedCardsPlayedPositionArray: positionOfCardsPlayedArray, cardType } = req.body;
       console.log(positionOfCardsPlayedArray, 'position of cards played');
 
       const currUserGameRound = await currGame.getGamesUsers({
@@ -528,8 +528,8 @@ export default function games(db) {
       // Since there are 3 types of cards, we need to make sure which type we are selecting
 
       // Get the cardsInHand
-      const typeOfCards = JSON.parse(currUserGameRound[0].cardsInHand);
-      console.log(typeOfCards, 'original cardsInHand');
+      const typeOfCardsPlayed = JSON.parse(currUserGameRound[0][cardType]);
+      console.log(typeOfCardsPlayed, 'original cardsInHand');
 
       // Function scoped - Track the updated cards in hand
       let updatedCardsInHand = [];
@@ -539,7 +539,7 @@ export default function games(db) {
       // ********* Card Validation Logic *********** //
       // If move is illegal, retrieve all cards from discardPile into Hand
       if (positionOfCardsPlayedArray.length === 0) {
-        updatedCardsInHand = [...typeOfCards, ...discardPile];
+        updatedCardsInHand = [...typeOfCardsPlayed, ...discardPile];
         // empty discard pile and no need to draw new cards
         discardPile = [];
       }
@@ -558,12 +558,12 @@ export default function games(db) {
           // E.g index 1 and 2 of the cardInHand are selected, we compare
           // card at index 2 against card against index 1
             if (indexOfCardPosition + 1 <= positionOfCardsPlayedArray.length - 1) {
-              console.log('card1', typeOfCards[positionOfCardsPlayedArray[indexOfCardPosition]]);
+              console.log('card1', typeOfCardsPlayed[positionOfCardsPlayedArray[indexOfCardPosition]]);
               console.log(positionOfCardsPlayedArray[indexOfCardPosition], 'posNo-1');
-              console.log('card2', typeOfCards[positionOfCardsPlayedArray[indexOfCardPosition + 1]]);
+              console.log('card2', typeOfCardsPlayed[positionOfCardsPlayedArray[indexOfCardPosition + 1]]);
               console.log(positionOfCardsPlayedArray[indexOfCardPosition], 'posNo-2');
-              if ((typeOfCards[positionOfCardsPlayedArray[indexOfCardPosition]].rank)
-              !== (typeOfCards[positionOfCardsPlayedArray[indexOfCardPosition + 1]].rank)
+              if ((typeOfCardsPlayed[positionOfCardsPlayedArray[indexOfCardPosition]].rank)
+              !== (typeOfCardsPlayed[positionOfCardsPlayedArray[indexOfCardPosition + 1]].rank)
               ) {
                 areCardsTheSame = false;
               }
@@ -580,12 +580,12 @@ export default function games(db) {
         // Only relevant if topDiscardedCard is not undefined
         if (topDiscardedCard) {
           if (topDiscardedCard.rank !== 10
-            && typeOfCards[positionOfCardsPlayedArray[0]].rank < topDiscardedCard.rank) {
+            && typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank < topDiscardedCard.rank) {
             // Wildcard 2: Resets the discard pile to number 2
             // Wildcard 10: Removes all the discard pile
-            if (typeOfCards[positionOfCardsPlayedArray[0]].rank !== 2
-              && typeOfCards[positionOfCardsPlayedArray[0]].rank !== 10) {
-              console.log(typeOfCards[positionOfCardsPlayedArray[0]], 'selected card');
+            if (typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank !== 2
+              && typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank !== 10) {
+              console.log(typeOfCardsPlayed[positionOfCardsPlayedArray[0]], 'selected card');
               console.log(topDiscardedCard, 'topDiscardedCard');
               console.log('selected card(s) is not larger discarded card and is not a wildcard');
               return;
@@ -596,13 +596,13 @@ export default function games(db) {
         // If it passes test 1 and 2, means the selected cards can be pushed into the discardPile
         console.log(positionOfCardsPlayedArray, 'position array');
         positionOfCardsPlayedArray.forEach((position) => {
-          discardPile.push(typeOfCards[position]);
+          discardPile.push(typeOfCardsPlayed[position]);
           console.log(discardPile, 'pushed in a new card');
         });
         console.log(discardPile, 'discardPile');
 
         // Special case if wildcard 10 is played, remove all the discardPile
-        if (typeOfCards[positionOfCardsPlayedArray[0]].rank === 10) {
+        if (typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank === 10) {
           discardPile.length = 0;
         }
         // Special case if 4 of a kind are played in a row, remove all the discardPile
@@ -624,7 +624,7 @@ export default function games(db) {
         }
 
         // Remove the played cards from the hand
-        updatedCardsInHand = typeOfCards.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
+        updatedCardsInHand = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
         console.log(updatedCardsInHand, 'updatedCardsInHand');
         // Draw cards until there are 3 cards in hand
         const numOfCardsInHand = updatedCardsInHand.length;
@@ -652,7 +652,7 @@ export default function games(db) {
       // When cards other than 10 is played, and 4 of a kind is NOT played consecutively
       // we switch players
       if (positionOfCardsPlayedArray.length > 0) {
-        if (typeOfCards[positionOfCardsPlayedArray[0]].rank !== 10 && isFourOfAKindPlayed === false) {
+        if (typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank !== 10 && isFourOfAKindPlayed === false) {
           const result = await switchPlayerTurn(currGame, db);
           res.send(result);
           return;
