@@ -508,7 +508,7 @@ export default function games(db) {
       console.log(req.body, 'req-body');
       const { selectedCardsPlayedPositionArray: positionOfCardsPlayedArray, cardType } = req.body;
       console.log(positionOfCardsPlayedArray, 'position of cards played');
-
+      console.log(cardType, 'cardType');
       const currUserGameRound = await currGame.getGamesUsers({
         where: {
           UserId: req.params.playerId,
@@ -526,21 +526,25 @@ export default function games(db) {
       const drawPile = JSON.parse(currGame.drawPile);
 
       // Since there are 3 types of cards, we need to make sure which type we are selecting
-
-      // Get the cardsInHand
+      // Get the type of card played (cardsInHand, faceUpCard, faceDownCard etc)
       const typeOfCardsPlayed = JSON.parse(currUserGameRound[0][cardType]);
       console.log(typeOfCardsPlayed, 'original cardsInHand');
 
       // Function scoped - Track the updated cards in hand
       let updatedCardsInHand = [];
+      let updatedFaceUpCards = [];
+      const updatedFaceDownCards = [];
       // Function scoped - Track if four of a kind is played
       let isFourOfAKindPlayed = false;
 
       // ********* Card Validation Logic *********** //
-      // If move is illegal, retrieve all cards from discardPile into Hand
-      if (positionOfCardsPlayedArray.length === 0) {
+      // If move is illegal/no cards could be played, retrieve all cards from discardPile into Hand
+      if (cardType === 'cardsInHand' && positionOfCardsPlayedArray.length === 0) {
         updatedCardsInHand = [...typeOfCardsPlayed, ...discardPile];
         // empty discard pile and no need to draw new cards
+        discardPile = [];
+      } else if (cardType === 'faceUpCards' && positionOfCardsPlayedArray.length === 0) {
+        updatedCardsInHand = discardPile;
         discardPile = [];
       }
       // Else if card(s) are submitted
@@ -623,9 +627,14 @@ export default function games(db) {
           }
         }
 
+        if (cardType === 'cardsInHand') {
         // Remove the played cards from the hand
-        updatedCardsInHand = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
-        console.log(updatedCardsInHand, 'updatedCardsInHand');
+          updatedCardsInHand = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
+          console.log(updatedCardsInHand, 'updatedCardsInHand');
+        } else if (cardType === 'faceUpCards') {
+          updatedFaceUpCards = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
+        }
+
         // Draw cards until there are 3 cards in hand
         const numOfCardsInHand = updatedCardsInHand.length;
         if (numOfCardsInHand < 3) {
@@ -646,6 +655,16 @@ export default function games(db) {
 
       currUserGameRound[0].cardsInHand = JSON.stringify(updatedCardsInHand);
       currUserGameRound[0].changed('cardsInHand', true);
+
+      if (cardType === 'faceUpCards') {
+        currUserGameRound[0].faceUpCards = JSON.stringify(updatedFaceUpCards);
+        currUserGameRound[0].changed('faceUpCards', true);
+      }
+      if (cardType === 'faceDownCards') {
+        currUserGameRound[0].faceUpCards = JSON.stringify(updatedFaceUpCards);
+        currUserGameRound[0].changed('faceDownCards', true);
+      }
+
       await currUserGameRound[0].save();
 
       // *********** Switch Player Turn Logic ************//

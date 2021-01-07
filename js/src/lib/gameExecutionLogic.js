@@ -59,10 +59,12 @@ const displayTableTopAndBtns = () => {
       // Obtain the currGame discard and draw pile data
       const { currGame } = response.data;
       const { drawPile: drawPileJSON, discardPile: discardPileJSON } = currGame;
+      const { cardsInHand: cardsInHandJSON, faceUpCards: faceUpCardsJSON, faceDownCards: faceDownCardsJSON } = loggedInPlayerHands[0];
       const drawPile = JSON.parse(drawPileJSON);
-      console.log(drawPile, 'drawPile');
       const discardPile = JSON.parse(discardPileJSON);
-      console.log(discardPile, 'discardPile');
+      const cardsInHand = JSON.parse(cardsInHandJSON);
+      const faceUpCards = JSON.parse(faceUpCardsJSON);
+      const faceDownCards = JSON.parse(faceDownCardsJSON);
 
       // Get the most recently discarded card
       let topDiscardedCard;
@@ -127,20 +129,25 @@ const displayTableTopAndBtns = () => {
       let cardType;
       console.log(selectedCardsInHandPositionArray, 'selectedCardsInHandPosArray');
       console.log(selectedCardsInHandPositionArray.length, 'length');
-      if (selectedCardsInHandPositionArray.length > 0) {
+      if (cardsInHand.length > 0) {
         selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
         cardType = 'cardsInHand';
-      } else if (selectedFaceUpCardsPositionArray.length > 0) {
+        console.log('1');
+      } else if (faceUpCards.length > 0) {
         selectedCardsPlayedPositionArray = selectedFaceUpCardsPositionArray;
         cardType = 'faceUpCards';
-      } else if (selectedFaceDownCardsPositionArray.length > 0) {
+        console.log('2');
+      } else if (faceDownCards.length > 0) {
         selectedCardsPlayedPositionArray = selectedFaceDownCardsPositionArray;
         cardType = 'faceDownCards';
+        console.log('3');
       } else {
         selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
         cardType = 'cardsInHand';
+        console.log('4');
       }
       console.log(selectedCardsPlayedPositionArray, 'selectedCardsPlayed position array');
+      console.log(cardType, 'cardType');
 
       if (currGame.CurrentPlayerId === loggedInUserId) {
         console.log('reached here');

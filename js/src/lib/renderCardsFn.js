@@ -67,24 +67,26 @@ const renderFaceUpCards = (selectedPlayerHandArray,
 
   const faceUpCards = JSON.parse(selectedPlayerHandArray[0].faceUpCards);
   const cardsInHand = JSON.parse(selectedPlayerHandArray[0].cardsInHand);
-  faceUpCards.forEach((faceUpCard, faceUpCardIndex) => {
-    const cardImg = document.createElement('img');
-    cardImg.src = getCardPicUrl(faceUpCard);
-    cardImg.classList.add('card-pic');
-    selectedDivToAppendTo.appendChild(cardImg);
+  if (faceUpCards.length > 0) {
+    faceUpCards.forEach((faceUpCard, faceUpCardIndex) => {
+      const cardImg = document.createElement('img');
+      cardImg.src = getCardPicUrl(faceUpCard);
+      cardImg.classList.add('card-pic');
+      selectedDivToAppendTo.appendChild(cardImg);
 
-    // If draw pile is defined means we are checking if loggedInPlayer can use face up cards
-    if (drawPile) {
-    // If drawPile and selectedPlayerHandArray is empty, activate Face up cards
-      if (drawPile.length === 0 && cardsInHand.length === 0) {
-        console.log('eventListeners Added');
-        cardImg.addEventListener('click', () => {
-          selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray,
-            faceUpCardIndex, cardImg, faceUpCard, topDiscardedCard);
-        });
+      // If draw pile is defined means we are checking if loggedInPlayer can use face up cards
+      if (drawPile) {
+        // If drawPile and selectedPlayerHandArray is empty, activate Face up cards
+        if (drawPile.length === 0 && cardsInHand.length === 0) {
+          console.log('eventListeners Added');
+          cardImg.addEventListener('click', () => {
+            selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray,
+              faceUpCardIndex, cardImg, faceUpCard, topDiscardedCard);
+          });
+        }
       }
-    }
-  });
+    });
+  }
 };
 
 const renderFaceDownCards = (selectedPlayerHandArray,
@@ -151,13 +153,15 @@ const renderCardsInHand = (selectedPlayerHandArray,
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
   const cardsInHand = JSON.parse(selectedPlayerHandArray[0].cardsInHand);
-  cardsInHand.forEach((cardInHand, cardIndex) => {
-    const cardImg = document.createElement('img');
-    cardImg.src = getCardPicUrl(cardInHand);
-    cardImg.classList.add('card-pic');
-    selectedDivToAppendTo.appendChild(cardImg);
-    cardImg.addEventListener('click', () => selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, cardInHand, topDiscardedCard));
-  });
+  if (cardsInHand.length > 0) {
+    cardsInHand.forEach((cardInHand, cardIndex) => {
+      const cardImg = document.createElement('img');
+      cardImg.src = getCardPicUrl(cardInHand);
+      cardImg.classList.add('card-pic');
+      selectedDivToAppendTo.appendChild(cardImg);
+      cardImg.addEventListener('click', () => selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray, cardIndex, cardImg, cardInHand, topDiscardedCard));
+    });
+  }
 };
 
 export {
