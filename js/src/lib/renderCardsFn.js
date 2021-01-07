@@ -153,6 +153,7 @@ const renderCardsInHand = (selectedPlayerHandArray,
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
   const cardsInHand = JSON.parse(selectedPlayerHandArray[0].cardsInHand);
+  console.log(cardsInHand.length, 'cardsInHand length');
   if (cardsInHand.length > 0) {
     cardsInHand.forEach((cardInHand, cardIndex) => {
       const cardImg = document.createElement('img');

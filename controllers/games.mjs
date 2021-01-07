@@ -523,7 +523,8 @@ export default function games(db) {
       }
 
       // Get the Draw Pile
-      const drawPile = JSON.parse(currGame.drawPile);
+      // const drawPile = JSON.parse(currGame.drawPile);
+      const drawPile = [];
 
       // Since there are 3 types of cards, we need to make sure which type we are selecting
       // Get the type of card played (cardsInHand, faceUpCard, faceDownCard etc)
@@ -636,10 +637,12 @@ export default function games(db) {
         }
 
         // Draw cards until there are 3 cards in hand
-        const numOfCardsInHand = updatedCardsInHand.length;
-        if (numOfCardsInHand < 3) {
-          for (let i = 0; i < (3 - numOfCardsInHand); i += 1) {
-            updatedCardsInHand.push(drawPile.pop());
+        if (drawPile.length > 0) {
+          const numOfCardsInHand = updatedCardsInHand.length;
+          if (numOfCardsInHand < 3) {
+            for (let i = 0; i < (3 - numOfCardsInHand); i += 1) {
+              updatedCardsInHand.push(drawPile.pop());
+            }
           }
         }
       }
