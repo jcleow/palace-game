@@ -534,7 +534,7 @@ export default function games(db) {
       // Function scoped - Track the updated cards in hand
       let updatedCardsInHand = [];
       let updatedFaceUpCards = [];
-      const updatedFaceDownCards = [];
+      let updatedFaceDownCards = [];
       // Function scoped - Track if four of a kind is played
       let isFourOfAKindPlayed = false;
 
@@ -590,16 +590,24 @@ export default function games(db) {
             // Wildcard 10: Removes all the discard pile
             if (typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank !== 2
               && typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank !== 10) {
+              // An error has occured as the client side should not
+              // have sent invalid cardsInHand/faceUpCards
+              if (cardType !== 'faceDownCard') {
+                console.log(typeOfCardsPlayed[positionOfCardsPlayedArray[0]], 'selected card');
+                console.log(topDiscardedCard, 'topDiscardedCard');
+                console.log('selected card(s) is not larger discarded card and is not a wildcard');
+                return;
+              }
+              // As client side should not perform validation on face down cards, we check
+              // if it is a valid move here
               console.log(typeOfCardsPlayed[positionOfCardsPlayedArray[0]], 'selected card');
               console.log(topDiscardedCard, 'topDiscardedCard');
               console.log('selected card(s) is not larger discarded card and is not a wildcard');
-              return;
             }
           }
         }
 
         // If it passes test 1 and 2, means the selected cards can be pushed into the discardPile
-        console.log(positionOfCardsPlayedArray, 'position array');
         positionOfCardsPlayedArray.forEach((position) => {
           discardPile.push(typeOfCardsPlayed[position]);
           console.log(discardPile, 'pushed in a new card');
@@ -627,16 +635,17 @@ export default function games(db) {
             }
           }
         }
-
+        // Remove the played cards from the type of hand
         if (cardType === 'cardsInHand') {
-        // Remove the played cards from the hand
           updatedCardsInHand = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
           console.log(updatedCardsInHand, 'updatedCardsInHand');
         } else if (cardType === 'faceUpCards') {
           updatedFaceUpCards = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
+        } else if (cardType === 'faceDownCards') {
+          updatedFaceDownCards = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
         }
 
-        // Draw cards until there are 3 cards in hand
+        // Draw cards until there are 3 cards in hand if drawPile still exists
         if (drawPile.length > 0) {
           const numOfCardsInHand = updatedCardsInHand.length;
           if (numOfCardsInHand < 3) {
@@ -664,7 +673,7 @@ export default function games(db) {
         currUserGameRound[0].changed('faceUpCards', true);
       }
       if (cardType === 'faceDownCards') {
-        currUserGameRound[0].faceUpCards = JSON.stringify(updatedFaceUpCards);
+        currUserGameRound[0].faceDownCards = JSON.stringify(updatedFaceDownCards);
         currUserGameRound[0].changed('faceDownCards', true);
       }
 

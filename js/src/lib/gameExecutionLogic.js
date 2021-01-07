@@ -142,6 +142,7 @@ const displayTableTopAndBtns = () => {
         cardType = 'faceDownCards';
         console.log('3');
       } else {
+        // This might be redundant as the game would have ended
         selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
         cardType = 'cardsInHand';
         console.log('4');

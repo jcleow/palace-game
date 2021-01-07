@@ -59,6 +59,31 @@ const selectCardsToPlay = (selectedCardsPositionArray, selectedCardsArray, cardI
   }
 };
 
+const selectOneCardToPlay = (selectedFaceDownCardsPositionArray, selectedFaceDownCardsArray,
+  selectedFaceDownCardIndex, cardImg, selectedFaceDownCard) => {
+  // Selecting on a previously unselected card...
+  if (!cardImg.style.border) {
+    // clear out all other selections since there can only be 1 card played at once
+    const allFaceDownCardImgs = document.querySelectorAll('#face-down-card');
+    allFaceDownCardImgs.forEach((faceDownCardImg) => {
+      faceDownCardImg.style.border = '';
+    });
+    selectedFaceDownCardsPositionArray.length = 0;
+    selectedFaceDownCardsArray.length = 0;
+
+    cardImg.style.border = 'thick solid #0000FF';
+    // Push in the selected card/index into the arrays
+    selectedFaceDownCardsPositionArray.push(selectedFaceDownCardIndex);
+    selectedFaceDownCardsArray.push(selectedFaceDownCard);
+    // Selecting on a previously selected card...
+  } else {
+    // Clear all highlights and selections in the array
+    cardImg.style.border = '';
+    selectedFaceDownCardsPositionArray.length = 0;
+    selectedFaceDownCardsArray.length = 0;
+  }
+};
+
 const renderFaceUpCards = (selectedPlayerHandArray,
   selectedDivToAppendTo, selectedCardsArray,
   selectedCardsPositionArray, topDiscardedCard, drawPile) => {
@@ -101,6 +126,7 @@ const renderFaceDownCards = (selectedPlayerHandArray,
     const cardImg = document.createElement('img');
     cardImg.src = '/cardPictures/COVER-CARD.png';
     cardImg.classList.add('card-pic');
+    cardImg.setAttribute('id', 'face-down-card');
     selectedDivToAppendTo.appendChild(cardImg);
     // If draw pile is defined means we are checking if loggedInPlayer can use face down cards
     if (drawPile) {
@@ -108,8 +134,8 @@ const renderFaceDownCards = (selectedPlayerHandArray,
       if (drawPile.length === 0 && cardsInHand.length === 0 && faceUpCards.length === 0) {
         console.log('eventListeners Added');
         cardImg.addEventListener('click', () => {
-          selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray,
-            faceDownCardIndex, cardImg, faceDownCard, topDiscardedCard);
+          selectOneCardToPlay(selectedCardsPositionArray, selectedCardsArray,
+            faceDownCardIndex, cardImg, faceDownCard);
         });
       }
     }
