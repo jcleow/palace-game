@@ -67,19 +67,22 @@ const renderFaceUpCards = (selectedPlayerHandArray,
   selectedCardsPositionArray, topDiscardedCard, drawPile) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
-  JSON.parse(selectedPlayerHandArray[0].faceUpCards).forEach((faceUpCard, faceUpCardIndex) => {
+
+  const faceUpCards = JSON.parse(selectedPlayerHandArray[0].faceUpCards);
+  const cardsInHand = JSON.parse(selectedPlayerHandArray[0].cardsInHand);
+  faceUpCards.forEach((faceUpCard, faceUpCardIndex) => {
     const cardImg = document.createElement('img');
     cardImg.src = getCardPicUrl(faceUpCard);
     cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
     console.log(drawPile, 'drawPile-1');
-    console.log(selectedPlayerHandArray[0].cardsInHand, 'cardsInHand-1');
-    console.log(selectedPlayerHandArray[0].cardsInHand.length, 'cardsInHand-2');
+    console.log(cardsInHand, 'cardsInHand-122');
+    console.log(cardsInHand.length, 'cardsInHand-244');
 
     // If draw pile is defined means we are checking if loggedInPlayer can use face up cards
     if (drawPile) {
     // If drawPile and selectedPlayerHandArray is empty, activate Face up cards
-      if (drawPile.length === 0 && selectedPlayerHandArray[0].cardsInHand.length === 0) {
+      if (drawPile.length === 0 && cardsInHand.length === 0) {
         console.log('eventListeners Added');
         cardImg.addEventListener('click', () => {
           selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray,
@@ -90,14 +93,30 @@ const renderFaceUpCards = (selectedPlayerHandArray,
   });
 };
 
-const renderFaceDownCards = (selectedPlayerHandArray, selectedDivToAppendTo) => {
+const renderFaceDownCards = (selectedPlayerHandArray,
+  selectedDivToAppendTo, selectedCardsArray,
+  selectedCardsPositionArray, topDiscardedCard, drawPile) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
-  JSON.parse(selectedPlayerHandArray[0].faceDownCards).forEach((faceUpCard) => {
+  const cardsInHand = JSON.parse(selectedPlayerHandArray[0].cardsInHand);
+  const faceUpCards = JSON.parse(selectedPlayerHandArray[0].faceUpCards);
+  const faceDownCards = JSON.parse(selectedPlayerHandArray[0].faceDownCards);
+  faceDownCards.forEach((faceDownCard, faceDownCardIndex) => {
     const cardImg = document.createElement('img');
     cardImg.src = '/cardPictures/COVER-CARD.png';
     cardImg.classList.add('card-pic');
     selectedDivToAppendTo.appendChild(cardImg);
+    // If draw pile is defined means we are checking if loggedInPlayer can use face down cards
+    if (drawPile) {
+    // If drawPile and selectedPlayerHandArray, face up cards are empty, activate Face down cards
+      if (drawPile.length === 0 && cardsInHand.length === 0 && faceUpCards.length === 0) {
+        console.log('eventListeners Added');
+        cardImg.addEventListener('click', () => {
+          selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray,
+            faceDownCardIndex, cardImg, faceDownCard, topDiscardedCard);
+        });
+      }
+    }
   });
 };
 
@@ -137,7 +156,8 @@ const renderCardsInHand = (selectedPlayerHandArray,
   selectedDivToAppendTo, selectedCardsArray, selectedCardsPositionArray, topDiscardedCard) => {
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
-  JSON.parse(selectedPlayerHandArray[0].cardsInHand).forEach((cardInHand, cardIndex) => {
+  const cardsInHand = JSON.parse(selectedPlayerHandArray[0].cardsInHand);
+  cardsInHand.forEach((cardInHand, cardIndex) => {
     const cardImg = document.createElement('img');
     cardImg.src = getCardPicUrl(cardInHand);
     cardImg.classList.add('card-pic');
