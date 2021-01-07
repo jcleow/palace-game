@@ -523,8 +523,7 @@ export default function games(db) {
       }
 
       // Get the Draw Pile
-      // const drawPile = JSON.parse(currGame.drawPile);
-      const drawPile = [];
+      const drawPile = JSON.parse(currGame.drawPile);
 
       // Since there are 3 types of cards, we need to make sure which type we are selecting
       // Get the type of card played (cardsInHand, faceUpCard, faceDownCard etc)
@@ -535,8 +534,12 @@ export default function games(db) {
       let updatedCardsInHand = [];
       let updatedFaceUpCards = [];
       let updatedFaceDownCards = [];
+
       // Function scoped - Track if four of a kind is played
       let isFourOfAKindPlayed = false;
+
+      // Function scoped - Track whether a face down card when played is SMALLER than the top discarded card
+      let isFaceDownCardSmallerThanTopDiscardedCard = false;
 
       // ********* Card Validation Logic *********** //
       // If move is illegal/no cards could be played, retrieve all cards from discardPile into Hand
@@ -592,7 +595,7 @@ export default function games(db) {
               && typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank !== 10) {
               // An error has occured as the client side should not
               // have sent invalid cardsInHand/faceUpCards
-              if (cardType !== 'faceDownCard') {
+              if (cardType !== 'faceDownCards') {
                 console.log(typeOfCardsPlayed[positionOfCardsPlayedArray[0]], 'selected card');
                 console.log(topDiscardedCard, 'topDiscardedCard');
                 console.log('selected card(s) is not larger discarded card and is not a wildcard');
@@ -602,7 +605,8 @@ export default function games(db) {
               // if it is a valid move here
               console.log(typeOfCardsPlayed[positionOfCardsPlayedArray[0]], 'selected card');
               console.log(topDiscardedCard, 'topDiscardedCard');
-              console.log('selected card(s) is not larger discarded card and is not a wildcard');
+              console.log('selected facedowncard(s) is not larger discarded card and is not a wildcard');
+              isFaceDownCardSmallerThanTopDiscardedCard = true;
             }
           }
         }
@@ -618,8 +622,8 @@ export default function games(db) {
         if (typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank === 10) {
           discardPile.length = 0;
         }
-        // Special case if 4 of a kind are played in a row, remove all the discardPile
 
+        // Special case if 4 of a kind are played in a row, remove all the discardPile
         let numOfSameConsecutiveCards = 0;
         if (discardPile.length > 3) {
           // Start looping from the second last index
@@ -635,6 +639,15 @@ export default function games(db) {
             }
           }
         }
+
+        // Special case if a face down card is played and is smaller than the top
+        // discarded pile && it has not been removed by wildcard 10 or 4 of a kind
+        if (isFaceDownCardSmallerThanTopDiscardedCard && discardPile.length > 0) {
+          updatedCardsInHand = discardPile;
+          discardPile.length = 0;
+          console.log('all facedown cards & discardPile cards are pushed into user\'s hand');
+        }
+
         // Remove the played cards from the type of hand
         if (cardType === 'cardsInHand') {
           updatedCardsInHand = typeOfCardsPlayed.filter((card, index) => !positionOfCardsPlayedArray.includes(index));
