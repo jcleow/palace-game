@@ -624,14 +624,19 @@ export default function games(db) {
         }
 
         // Special case if 4 of a kind are played in a row, remove all the discardPile
-        let numOfSameConsecutiveCards = 0;
+        let numOfTimesSameConsecutiveCards = 0;
         if (discardPile.length > 3) {
+          console.log('start checking for 4 of a kind');
           // Start looping from the second last index
-          for (let i = discardPile.length - 2; i > discardPile.length - 5; i -= 1) {
+          for (let i = 1; i < 4; i += 1) {
+            console.log('checking -1');
             // Compare against the second last index against the last index / compare backwards
-            if (discardPile[i] === discardPile[i + 1]) {
-              numOfSameConsecutiveCards += 1;
-              if (numOfSameConsecutiveCards === 4) {
+            if (discardPile[discardPile.length - i - 1].rank === discardPile[discardPile.length - i].rank) {
+              console.log('checking -2');
+              numOfTimesSameConsecutiveCards += 1;
+              console.log(numOfTimesSameConsecutiveCards, 'numOfConsect');
+              if (numOfTimesSameConsecutiveCards === 3) {
+                console.log('checking -3 confirm 4 of a kind');
                 isFourOfAKindPlayed = true;
                 // remove all cards in discardPile
                 discardPile.length = 0;
