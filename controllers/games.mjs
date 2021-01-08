@@ -316,9 +316,27 @@ export default function games(db) {
         const currGameUserGameRoundsPromises = currGameRoundDetails.map((gameRound) => gameRound.getUser());
         const currGameUserGameRoundResults = await Promise.all(currGameUserGameRoundsPromises);
         const currGameRoundUsernames = currGameUserGameRoundResults.map((result) => result.username);
-        res.send({ currGameRoundDetails, currGameRoundUsernames, currGame });
+        res.send({
+          currGameRoundDetails, currGameRoundUsernames, currGame,
+        });
       } else if (currGame.gameState === 'setGame') {
-        res.redirect(`/games/${req.params.gameId}/players/${req.loggedInUserId}`);
+        // redirect to function updateCardsAfterSetGame, which upon refresh sets to
+        // game state of 'ongoing' below
+        // First check if face up cards already exists for the player requesting this info
+        const currPlayer = await db.User.findByPk(req.loggedInUserId);
+        const currPlayerGameRound = await currPlayer.getGamesUsers({
+          where: {
+            GameId: req.params.gameId,
+          },
+        });
+        console.log(currPlayerGameRound, 'currPlayerGameRound');
+
+        if (currPlayerGameRound[0].faceUpCards === null) {
+          console.log('test-1');
+          res.redirect(`/games/${req.params.gameId}/players/${req.loggedInUserId}`);
+        } else {
+          res.send({ message: 'waiting for other players' });
+        }
       } else if (currGame.gameState === 'ongoing') {
       // Else find the user with the next player id
         let currPlayer;
@@ -406,7 +424,14 @@ export default function games(db) {
         },
       });
 
-      // Update the player's cardsInHand
+      // Get all of the face up cards in player's hands
+      const existingPlayerFaceUpCards = JSON.parse(playerHand.faceUpCards);
+
+      if (existingPlayerFaceUpCards) {
+        return;
+      }
+
+      // Get all of existing player's cards in hand
       const existingPlayerCardsInHand = JSON.parse(playerHand.cardsInHand);
 
       // For each of selectedCards, remove the same card in player's hand

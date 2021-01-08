@@ -5,20 +5,24 @@ import {
 } from './renderCardsFn.js';
 import { createPlayBtn } from './buttonCreationFn.js';
 import getCardPicUrl from './getCardPicUrlFn.js';
+import refreshGamePlay from './refreshFn.js';
 // ************ Business Logic ***********//
 
 // Business logic that gets the existing state of the game from the table through AJAX
-const refreshGameInfo = () => {
+const refreshGameInfo = (clearIntervalRef) => {
   console.log('gameIsRefreshed');
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
       const { gameState: currGameState } = response.data.currGame;
-      const { currGameRoundUsernames, currPlayer } = response.data;
+      const { currGameRoundUsernames, currPlayer, playerHand } = response.data;
       if (currGameState === 'waiting') {
         // update users who have joined the game
         updateUsersJoinedDiv(currGameRoundUsernames);
       } else if (currGameState === 'setGame') {
+        clearInterval(clearIntervalRef);
         displaySetGameCardPicsAndBtn(response);
+        console.log(playerHand, 'currPlayer');
+
         console.log('gameIsRefreshed-setgame-state');
       } else if (currGameState === 'ongoing') {
         // Update to see who is the current user(name) to play
@@ -222,14 +226,17 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
 
   const faceDownBtn = document.createElement('button');
   faceDownBtn.innerText = 'Place Selected Cards on Table';
-
-  document.body.appendChild(cardPicContainer);
-  document.body.appendChild(faceDownBtn);
+  const setGameContainer = document.querySelector('#set-game-container');
+  setGameContainer.innerHTML = '';
+  setGameContainer.appendChild(cardPicContainer);
+  setGameContainer.appendChild(faceDownBtn);
 
   faceDownBtn.addEventListener('click', () => {
     // remove button and all the images
-    document.body.removeChild(cardPicContainer);
-    document.body.removeChild(faceDownBtn);
+    setGameContainer.removeChild(cardPicContainer);
+    setGameContainer.removeChild(faceDownBtn);
+    // resume refreshing gameplay
+    refreshGamePlay();
 
     // Perform request to server to update faceDownCards
     axios.put(`/games/${currentGame.id}/players/${loggedInUserId}`, selectedCardsArray)

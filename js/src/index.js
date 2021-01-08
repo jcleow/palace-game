@@ -8,6 +8,7 @@ import {
 import { createLoginForm, createUserIdLabelAndLogOutBtnDisplay } from './lib/createLoginFormFn.js';
 import { updateUsersJoinedDiv } from './lib/updateHeaderDivFn.js';
 import { createNewGameBtn } from './lib/buttonCreationFn.js';
+import refreshGamePlay from './lib/refreshFn.js';
 
 // get the gameInterface div
 const gameInterface = document.querySelector('#game-interface');
@@ -31,6 +32,7 @@ const createGame = () => {
       headerDiv.innerText = `${response.data.currentPlayerName} has joined the game`;
       gameInterface.appendChild(createStartBtn());
       gameInterface.appendChild(createRefreshBtn());
+      refreshGamePlay();
       return Promise.resolve(currentGame);
     })
     .catch((error) => {
@@ -81,7 +83,7 @@ axios.get('/games')
             })
             .then((selectedGameResponse) => {
               const { currGameRoundDetails, currGameRoundUsernames } = selectedGameResponse.data;
-
+              refreshGamePlay();
               // Display deal & refresh buttons
               // Remove and reappend everytime a new game button is clicked
               // (to prevent disabled deal button specific to a game)
