@@ -1,7 +1,6 @@
 import jsSHA from 'jssha';
 import sequelizePkg from 'sequelize';
 import convertUserIdToHash, { hashPassword } from '../helper.mjs';
-import games from './games.mjs';
 
 const { Op } = sequelizePkg;
 
@@ -54,6 +53,7 @@ export default function users(db) {
   // Create/Start a new game
   const create = async (req, res) => {
     // query if the username already exists in the database
+    console.log(req.body, 'req-body');
     try {
       const userName = await db.User.findOne({
         where: {

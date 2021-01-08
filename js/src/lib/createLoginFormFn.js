@@ -66,7 +66,7 @@ const createLoginForm = (loginContainer) => {
 
   const registerNewUser = () => {
     const data = {};
-    data.email = usernameInput.value;
+    data.username = usernameInput.value;
     data.password = passwordInput.value;
     axios.post('/user/new', data)
       .then((response) => {
