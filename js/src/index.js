@@ -41,20 +41,18 @@ const createGame = () => {
     });
 };
 
-// create game btn
-createNewGameBtn(gameButtonsDiv, createGame);
-
 // Create all the elements inside loginContainer div for login form
-axios.get('/user')
-  .then((res) => {
-    if (res.data.loggedInUserId) {
-      createUserIdLabelAndLogOutBtnDisplay(loginContainer, res);
-    } else {
-      createLoginForm(loginContainer);
-    }
-  })
-
-  .catch((error) => { console.log(error); });
+const createLoginFormOrUserInfo = () => {
+  axios.get('/user')
+    .then((res) => {
+      if (res.data.loggedInUserId) {
+        createUserIdLabelAndLogOutBtnDisplay(loginContainer, res);
+      } else {
+        createLoginForm(loginContainer);
+      }
+    })
+    .catch((error) => { console.log(error); });
+};
 
 // Constantly Check if a game is already on-going(for multiplayer games)
 const getAllAvailableGames = (clearIntervalRef) => {
@@ -119,5 +117,6 @@ const refreshGamesAvailable = () => {
   }, 1000);
 };
 
+createLoginFormOrUserInfo();
 getAllAvailableGames();
 refreshGamesAvailable();
