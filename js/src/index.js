@@ -57,51 +57,67 @@ axios.get('/user')
   .catch((error) => { console.log(error); });
 
 // Constantly Check if a game is already on-going(for multiplayer games)
-axios.get('/games')
-  .then((onGoingGameResponses) => {
-    // set loggedInUserId obtained from server
-    loggedInUserId = Number(onGoingGameResponses.data.loggedInUserId);
+const getAllAvailableGames = (clearIntervalRef) => {
+  axios.get('/games')
+    .then((onGoingGameResponses) => {
+      gameButtonsDiv.innerHTML = '';
+      createNewGameBtn(gameButtonsDiv, createGame);
+      // set loggedInUserId obtained from server
+      loggedInUserId = Number(onGoingGameResponses.data.loggedInUserId);
 
-    // If there are more than 1 ongoing games, display these games
-    if (onGoingGameResponses.data.allOngoingGamesArray) {
-      onGoingGameResponses.data.allOngoingGamesArray.forEach((ongoingGame) => {
+      // If there are more than 1 ongoing games, display these games
+      if (onGoingGameResponses.data.allOngoingGamesArray) {
+        onGoingGameResponses.data.allOngoingGamesArray.forEach((ongoingGame) => {
         // create a button that retrieves each of the ongoing games
-        const gameButton = document.createElement('button');
-        gameButton.innerText = `Game: ${ongoingGame.id}`;
-        gameButtonsDiv.appendChild(gameButton);
+          const gameButton = document.createElement('button');
+          gameButton.innerText = `Game: ${ongoingGame.id}`;
+          gameButtonsDiv.appendChild(gameButton);
 
-        // add event listener to get/enter that particular game
-        gameButton.addEventListener('click', () => {
-          axios.post(`/games/${ongoingGame.id}/join/${loggedInUserId}`)
-            .then((joinGameResponse) => {
-              currentGame = joinGameResponse.data.currentGame;
-              // Display Start & Refresh Buttons
-              gameInterface.removeChild(gameButtonsDiv);
-              gameInterface.appendChild(createStartBtn());
-              gameInterface.appendChild(createRefreshBtn());
-              return axios.get(`/games/${ongoingGame.id}`);
-            })
-            .then((selectedGameResponse) => {
-              const { currGameRoundDetails, currGameRoundUsernames } = selectedGameResponse.data;
-              refreshGamePlay();
-              // Display deal & refresh buttons
-              // Remove and reappend everytime a new game button is clicked
-              // (to prevent disabled deal button specific to a game)
-              const existingStartBtn = document.querySelector('#start-btn');
-              const existingRefreshBtn = document.querySelector('#refresh-btn');
+          // add event listener to get/enter that particular game
+          gameButton.addEventListener('click', () => {
+            clearInterval(clearIntervalRef);
+            axios.post(`/games/${ongoingGame.id}/join/${loggedInUserId}`)
+              .then((joinGameResponse) => {
+                currentGame = joinGameResponse.data.currentGame;
+                // Display Start & Refresh Buttons
+                gameInterface.removeChild(gameButtonsDiv);
+                gameInterface.appendChild(createStartBtn());
+                gameInterface.appendChild(createRefreshBtn());
+                return axios.get(`/games/${ongoingGame.id}`);
+              })
+              .then((selectedGameResponse) => {
+                const { currGameRoundDetails, currGameRoundUsernames } = selectedGameResponse.data;
+                refreshGamePlay();
+                // Display deal & refresh buttons
+                // Remove and reappend everytime a new game button is clicked
+                // (to prevent disabled deal button specific to a game)
+                const existingStartBtn = document.querySelector('#start-btn');
+                const existingRefreshBtn = document.querySelector('#refresh-btn');
 
-              if (existingStartBtn) {
-                gameInterface.removeChild(existingStartBtn);
-              }
-              if (existingRefreshBtn) {
-                gameInterface.removeChild(existingRefreshBtn);
-              }
-              gameInterface.appendChild(createRefreshBtn());
-              updateUsersJoinedDiv(currGameRoundUsernames);
-            })
-            .catch((error) => { console.log(error); });
+                if (existingStartBtn) {
+                  gameInterface.removeChild(existingStartBtn);
+                }
+                if (existingRefreshBtn) {
+                  gameInterface.removeChild(existingRefreshBtn);
+                }
+                gameInterface.appendChild(createRefreshBtn());
+                updateUsersJoinedDiv(currGameRoundUsernames);
+              })
+              .catch((error) => { console.log(error); });
+          });
         });
-      });
-    }
-  })
-  .catch((error) => { console.log(error); });
+      }
+    })
+    .catch((error) => { console.log(error); });
+};
+
+// A SetInterval function caller that constantly refreshes
+// to get the most updated list of games
+const refreshGamesAvailable = () => {
+  const refreshGamesAvailableRef = setInterval(() => {
+    getAllAvailableGames(refreshGamesAvailableRef);
+  }, 1000);
+};
+
+getAllAvailableGames();
+refreshGamesAvailable();
