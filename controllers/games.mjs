@@ -383,6 +383,9 @@ export default function games(db) {
           where: {
             gameState: 'waiting',
           },
+          order: [
+            ['id', 'DESC'],
+          ],
         });
         if (allOngoingGamesArray) {
           res.send({ allOngoingGamesArray, loggedInUserId });
