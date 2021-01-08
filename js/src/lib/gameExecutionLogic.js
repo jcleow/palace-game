@@ -32,6 +32,7 @@ const refreshGameInfo = (clearIntervalRef) => {
         displayTableTopAndBtns();
         console.log('gameIsRefreshed-begin-state!!');
       } else if (currGameState === 'gameOver') {
+        clearInterval(clearIntervalRef);
         // Display all the cards on the table as well as cards in each player's hand
         displayTableTopAndBtns();
         const { winner } = response.data;
@@ -155,11 +156,15 @@ const displayTableTopAndBtns = () => {
       }
 
       if (currGame.CurrentPlayerId === loggedInUserId) {
-        console.log('reached here');
         // removes the playbtn if already created
         const playBtnContainer = document.querySelector('.play-button-container');
         playBtnContainer.innerHTML = '';
         const playBtn = createPlayBtn(playBtnContainer);
+
+        // If game over, we disable the playBtn
+        if (currGame.gameState === 'gameOver') {
+          playBtn.disabled = true;
+        }
 
         playBtn.addEventListener('click', () => {
           console.log('clicked once');
