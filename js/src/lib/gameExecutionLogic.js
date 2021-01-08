@@ -14,7 +14,7 @@ const refreshGameInfo = (clearIntervalRef) => {
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
       const { gameState: currGameState } = response.data.currGame;
-      const { currGameRoundUsernames, currPlayer, playerHand } = response.data;
+      const { currGameRoundUsernames, currPlayer } = response.data;
 
       if (currGameState === 'waiting') {
         // update users who have joined the game
@@ -195,6 +195,13 @@ const displayTableTopAndBtns = () => {
 
 // Logic for display all the 6 card pictures and relevant button for setting the faceup cards
 const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
+  // First check if set-game-display has already been set up
+  const setGameContainer = document.querySelector('#set-game-container');
+  // If it has been set up then we can stop the rendering process
+  if (setGameContainer.innerHTML) {
+    return;
+  }
+
   const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
 
   // Create a container to hold the pics
@@ -228,7 +235,6 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
 
   const faceDownBtn = document.createElement('button');
   faceDownBtn.innerText = 'Place Selected Cards on Table';
-  const setGameContainer = document.querySelector('#set-game-container');
   setGameContainer.innerHTML = '';
   setGameContainer.appendChild(cardPicContainer);
   setGameContainer.appendChild(faceDownBtn);
