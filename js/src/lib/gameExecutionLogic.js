@@ -25,6 +25,7 @@ const refreshGameInfo = (clearIntervalRef) => {
 
         console.log('gameIsRefreshed-setgame-state');
       } else if (currGameState === 'ongoing') {
+        clearInterval(clearIntervalRef);
         // Update to see who is the current user(name) to play
         updatePlayerActionDiv(currPlayer);
         // Display all the cards on the table as well as cards in each player's hand
@@ -141,23 +142,17 @@ const displayTableTopAndBtns = () => {
       if (cardsInHand.length > 0) {
         selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
         cardType = 'cardsInHand';
-        console.log('1');
       } else if (faceUpCards.length > 0) {
         selectedCardsPlayedPositionArray = selectedFaceUpCardsPositionArray;
         cardType = 'faceUpCards';
-        console.log('2');
       } else if (faceDownCards.length > 0) {
         selectedCardsPlayedPositionArray = selectedFaceDownCardsPositionArray;
         cardType = 'faceDownCards';
-        console.log('3');
       } else {
         // This might be redundant as the game would have ended
         selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
         cardType = 'cardsInHand';
-        console.log('4');
       }
-      console.log(selectedCardsPlayedPositionArray, 'selectedCardsPlayed position array');
-      console.log(cardType, 'cardType');
 
       if (currGame.CurrentPlayerId === loggedInUserId) {
         console.log('reached here');
@@ -179,8 +174,9 @@ const displayTableTopAndBtns = () => {
             })
             .catch((error) => { console.log(error); });
         });
-        // Else it is not the loggedInUser's turn, disable the play button
+        // Else it is not the loggedInUser's turn, disable the play button and refresh the game play
       } else {
+        refreshGamePlay();
         const playBtnContainer = document.querySelector('.play-button-container');
         let playBtn = document.querySelector('#play-btn');
         if (!playBtn) {
