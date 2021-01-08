@@ -15,22 +15,19 @@ const refreshGameInfo = (clearIntervalRef) => {
     .then((response) => {
       const { gameState: currGameState } = response.data.currGame;
       const { currGameRoundUsernames, currPlayer, playerHand } = response.data;
+
       if (currGameState === 'waiting') {
         // update users who have joined the game
         updateUsersJoinedDiv(currGameRoundUsernames);
       } else if (currGameState === 'setGame') {
         clearInterval(clearIntervalRef);
         displaySetGameCardPicsAndBtn(response);
-        console.log(playerHand, 'currPlayer');
-
-        console.log('gameIsRefreshed-setgame-state');
       } else if (currGameState === 'ongoing') {
         clearInterval(clearIntervalRef);
         // Update to see who is the current user(name) to play
         updatePlayerActionDiv(currPlayer);
         // Display all the cards on the table as well as cards in each player's hand
         displayTableTopAndBtns();
-        console.log('gameIsRefreshed-begin-state!!');
       } else if (currGameState === 'gameOver') {
         clearInterval(clearIntervalRef);
         // Display all the cards on the table as well as cards in each player's hand
@@ -164,6 +161,7 @@ const displayTableTopAndBtns = () => {
         // If game over, we disable the playBtn
         if (currGame.gameState === 'gameOver') {
           playBtn.disabled = true;
+          return;
         }
 
         playBtn.addEventListener('click', () => {
@@ -181,7 +179,10 @@ const displayTableTopAndBtns = () => {
         });
         // Else it is not the loggedInUser's turn, disable the play button and refresh the game play
       } else {
-        refreshGamePlay();
+        // As long as game is not over, continue to refresh
+        if (currGame.gameState !== 'gameOver') {
+          refreshGamePlay();
+        }
         const playBtnContainer = document.querySelector('.play-button-container');
         let playBtn = document.querySelector('#play-btn');
         if (!playBtn) {

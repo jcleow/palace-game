@@ -743,6 +743,7 @@ export default function games(db) {
         res.send({
           currGame, winner, message: 'gameOver',
         });
+        return;
       }
 
       // *********** Switch Player Turn Logic ************//
