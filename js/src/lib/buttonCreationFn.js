@@ -18,4 +18,5 @@ const createPlayBtn = (playBtnContainer) => {
   playBtnContainer.append(playBtn);
   return playBtn;
 };
+
 export { createNewGameBtn, createPlayBtn };
