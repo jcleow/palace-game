@@ -552,12 +552,10 @@ export default function games(db) {
       const typeOfCardsPlayed = JSON.parse(currUserGameRound[0][cardType]);
 
       // Function scoped - Track the updated cards in hand
-      let updatedCardsInHand = [];
-      updatedCardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
-      let updatedFaceUpCards = [];
-      updatedFaceUpCards = JSON.parse(currUserGameRound[0].faceUpCards);
-      let updatedFaceDownCards = [];
-      updatedFaceDownCards = JSON.parse(currUserGameRound[0].faceDownCards);
+      let updatedCardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
+      updatedCardsInHand.sort((cardA, cardB) => cardA.rank - cardB.rank);
+      let updatedFaceUpCards = JSON.parse(currUserGameRound[0].faceUpCards);
+      let updatedFaceDownCards = JSON.parse(currUserGameRound[0].faceDownCards);
 
       // Function scoped - Track if four of a kind is played
       let isFourOfAKindPlayed = false;
