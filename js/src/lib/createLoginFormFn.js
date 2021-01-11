@@ -19,13 +19,12 @@ const displayLoginForm = (loginContainer) => {
 
     axios.post('/user/login', { username, password })
       .then((response) => {
-        console.log(response, 'response');
         loggedInUserId = response.data.loggedInUserId;
         if (response.data.authenticated === true) {
           userProfile.style.display = 'block';
           loginFormContainer.style.display = 'none';
           // Add the display of user id and a logout button
-          createUserIdLabelAndLogOutBtnDisplay(loginContainer, response);
+          createUserProfile(response);
         } else {
           const errorMessage = document.createElement('label');
           errorMessage.innerHTML = 'Your username and/or password is incorrect';
@@ -57,10 +56,10 @@ const displayLoginForm = (loginContainer) => {
   registerBtn.addEventListener('click', registerNewUser);
 };
 
-const createUserIdLabelAndLogOutBtnDisplay = (parentNode, response) => {
+const createUserProfile = (response) => {
   // Create the userId display and logout btn
   const userIdLabel = document.querySelector('#logged-in-display');
-  userIdLabel.innerHTML = `Logged On User Id is ${response.data.loggedInUserId}`;
+  userIdLabel.innerHTML = `Logged in as ${response.data.loggedInUsername}`;
   const logoutBtn = document.getElementById('logout-btn');
   const loginFormContainer = document.querySelector('#login-container');
   const userProfile = document.querySelector('.user-profile');
@@ -68,10 +67,7 @@ const createUserIdLabelAndLogOutBtnDisplay = (parentNode, response) => {
   // If the user chooses to log out...
   logoutBtn.addEventListener('click', () => {
     axios.put('/user/logout')
-      .then((logoutResponse) => {
-        console.log(logoutResponse);
-        // Query for the dropdown-menu container
-
+      .then(() => {
         // Re-display login form and turn off userprofile display
         userProfile.style.display = 'none';
         loginFormContainer.style.display = 'block';
@@ -80,4 +76,4 @@ const createUserIdLabelAndLogOutBtnDisplay = (parentNode, response) => {
   });
 };
 
-export { displayLoginForm, createUserIdLabelAndLogOutBtnDisplay };
+export { displayLoginForm, createUserProfile };

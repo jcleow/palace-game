@@ -12,7 +12,6 @@ export default function users(db) {
         where: {
           username: req.body.username,
         },
-        attributes: ['id', 'password'],
       });
 
       const shaObj = new jsSHA('SHA-512', 'TEXT', { encoding: 'UTF8' });
@@ -28,7 +27,7 @@ export default function users(db) {
         // Send cookie through response
         res.cookie('loggedInUserId', selectedUser.id);
         res.cookie('loggedInHash', convertUserIdToHash(selectedUser.id));
-        res.send({ authenticated: true, loggedInUserId: selectedUser.id });
+        res.send({ authenticated: true, loggedInUserId: selectedUser.id, loggedInUsername: selectedUser.username });
         return;
       }
       res.send({ authenticated: false });
@@ -40,7 +39,10 @@ export default function users(db) {
   // Get the user's loggedInUserId from cookies
   const show = async (req, res) => {
     if (req.cookies) {
-      res.send({ loggedInUserId: Number(req.cookies.loggedInUserId) });
+      res.send({
+        loggedInUserId: Number(req.cookies.loggedInUserId),
+        username: req.loggedInUsername,
+      });
       return;
     }
     res.send('Not Logged In');
@@ -98,34 +100,11 @@ export default function users(db) {
         },
       });
 
-      console.log(randomPlayer2, 'randomPlayer2');
-
       // Create a new entry for the random second player in the table
-      // This works
       await db.GamesUser.create({
         GameId: req.body.id,
         UserId: randomPlayer2.id,
       });
-
-      // const newGameRound = await db.GamesUser.create({
-      //   player_num: 2,
-      //   score: 0,
-      // });
-      // console.log(newGameRound, 'newGameRound');
-      // console.log(newGameRound.id, 'newGameRound.id');
-
-      // const currentGame = await db.Game.findOne({
-      //   where: {
-      //     id: req.body.id,
-      //   },
-      // });
-      // // UPDATE "GamesUsers" SET "UserId"=1 WHERE "GameId" IS NULL
-
-      // const setUser = await newGameRound.setUser(randomPlayer2);
-      // const setGame = await newGameRound.setGame(currentGame);
-
-      // console.log(setUser, 'setUser');
-      // console.log(setGame, 'setGame');
 
       res.send(randomPlayer2);
     } catch (error) {
@@ -144,7 +123,7 @@ export default function users(db) {
     });
 
     currLoggedInUser.sessionLoggedIn = false;
-    currLoggedInUser.save();
+    await currLoggedInUser.save();
 
     res.clearCookie('loggedInUserId');
     res.clearCookie('loggedInHash');

@@ -1,13 +1,12 @@
 import axios from 'axios';
 import './styles.scss';
-
 // Import Helper Functions
 import {
   createStartBtn,
 } from './lib/gameExecutionLogic.js';
-import { displayLoginForm, createUserIdLabelAndLogOutBtnDisplay } from './lib/createLoginFormFn.js';
+import { displayLoginForm, createUserProfile } from './lib/createLoginFormFn.js';
 import { updateUsersJoinedDiv } from './lib/updateHeaderDivFn.js';
-import { createNewGameBtn } from './lib/buttonCreationFn.js';
+import { createNewGameBtn, displayExitGameBtn } from './lib/buttonCreationFn.js';
 import refreshGamePlay from './lib/refreshFn.js';
 
 // get the gameInterface div
@@ -16,6 +15,17 @@ const gameInterface = document.querySelector('#game-interface');
 const gameButtonsDiv = document.querySelector('.game-buttons');
 // store all login form elements inside this container
 const loginContainer = document.querySelector('#login-container');
+// Enable user to leave the game (button lives in the modal after pressing the cross)
+const confirmExitGameBtn = document.querySelector('.confirm-exit');
+
+// current exit game method is to refresh the page
+const exitGame = () => {
+  window.location = '/';
+};
+
+const enableExitGame = () => {
+  confirmExitGameBtn.addEventListener('click', exitGame);
+};
 
 // Function that creates a new game
 const createGame = () => {
@@ -32,6 +42,7 @@ const createGame = () => {
       headerDiv.innerText = `${response.data.currentPlayerName} has joined the game`;
       gameInterface.appendChild(createStartBtn());
       refreshGamePlay();
+      displayExitGameBtn();
       return Promise.resolve(currentGame);
     })
     .catch((error) => {
@@ -45,7 +56,7 @@ const createLoginFormOrUserInfo = () => {
   axios.get('/user')
     .then((res) => {
       if (res.data.loggedInUserId) {
-        createUserIdLabelAndLogOutBtnDisplay(loginContainer, res);
+        createUserProfile(res);
       } else {
         displayLoginForm(loginContainer);
       }
@@ -78,6 +89,7 @@ const getAllAvailableGames = (clearIntervalRef) => {
 
           // add event listener to get/enter that particular game
           gameButton.addEventListener('click', () => {
+            displayExitGameBtn();
             clearInterval(clearIntervalRef);
             axios.post(`/games/${ongoingGame.id}/join/${loggedInUserId}`)
               .then((joinGameResponse) => {
@@ -117,5 +129,6 @@ const refreshGamesAvailable = () => {
 };
 
 createLoginFormOrUserInfo();
+enableExitGame();
 getAllAvailableGames();
 refreshGamesAvailable();

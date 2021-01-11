@@ -28,6 +28,7 @@ export default function routes(app) {
       }
       req.middlewareLoggedIn = true;
       req.loggedInUserId = Number(req.cookies.loggedInUserId);
+      req.loggedInUsername = chosenUser.username;
       next();
       return;
     }

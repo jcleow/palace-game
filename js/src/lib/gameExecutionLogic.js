@@ -37,7 +37,8 @@ const refreshGameInfo = (clearIntervalRef) => {
       } else if (currGameState === 'ongoing') {
         clearInterval(clearIntervalRef);
         removeSpinningAnimation();
-        removeSetUpGameMsg();
+        // removeSetUpGameMsg();
+        updateGameRoomNumber(gameId);
         // Update to see who is the current user(name) to play
         updatePlayerActionDiv(currPlayer);
         // Display all the cards on the table as well as cards in each player's hand

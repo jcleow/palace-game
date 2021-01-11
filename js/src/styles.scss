@@ -18,6 +18,7 @@ body {
 
 .user-profile {
   display: none;
+  float: right;
 }
 .profilePic {
   height: 50px;
@@ -132,6 +133,27 @@ body {
 }
 #play-btn {
   height: 50px;
+}
+
+#exit-gameplay-btn {
+  display: none;
+}
+
+.exit-gameplay {
+  float: right;
+  margin-left: 15px;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+  text-shadow: 0 1px 0 #fff;
+  opacity: 0.5;
+  background: transparent;
+  border: none;
+}
+
+.exit-gameplay:focus {
+  outline: none;
 }
 
 // CSS for spinner animation

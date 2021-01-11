@@ -19,4 +19,13 @@ const createPlayBtn = (playBtnContainer) => {
   return playBtn;
 };
 
-export { createNewGameBtn, createPlayBtn };
+const displayExitGameBtn = () => {
+  // Render the cross button to exit the game at the top left
+  const customNavBar = document.querySelector('#custom-nav-bar');
+  const exitGameBtn = document.querySelector('#exit-gameplay-btn');
+  customNavBar.classList.remove('justify-content-end');
+  customNavBar.classList.add('justify-content-between');
+  exitGameBtn.style.display = 'block';
+};
+
+export { createNewGameBtn, createPlayBtn, displayExitGameBtn };
