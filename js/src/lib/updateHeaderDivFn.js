@@ -33,6 +33,15 @@ const updateWaitingForPlayerMsg = () => {
   headerDiv.innerText = 'You have selected your 3 face up cards. Waiting for other player(s)';
 };
 
+const loadSpinningAnimation = () => {
+  const cardPicsContainer = document.querySelector('#card-pics-container');
+  cardPicsContainer.innerHTML = '<div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>';
+};
+
+const removeSpinningAnimation = () => {
+  const cardPicsContainer = document.querySelector('#card-pics-container');
+  cardPicsContainer.innerHTML = '';
+};
 // Update in header which player's turn it is with player's username
 const updatePlayerActionDiv = (currPlayer) => {
   const headerDiv = document.querySelector('.header-div');
@@ -50,4 +59,5 @@ export {
   outputSetGameErrorMsgTooManyCards,
   updateWaitingForPlayerMsg,
   updatePlayerActionDiv, updateGameOverDiv,
+  loadSpinningAnimation, removeSpinningAnimation,
 };

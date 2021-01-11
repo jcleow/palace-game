@@ -5,6 +5,8 @@ import {
   outputSetGameErrorMsgNotEnoughCards,
   outputSetGameErrorMsgTooManyCards,
   updateWaitingForPlayerMsg,
+  loadSpinningAnimation,
+  removeSpinningAnimation,
 } from './updateHeaderDivFn.js';
 import {
   renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand,
@@ -31,6 +33,7 @@ const refreshGameInfo = (clearIntervalRef) => {
         displaySetGameCardPicsAndBtn(response);
       } else if (currGameState === 'ongoing') {
         clearInterval(clearIntervalRef);
+        removeSpinningAnimation();
         // Update to see who is the current user(name) to play
         updatePlayerActionDiv(currPlayer);
         // Display all the cards on the table as well as cards in each player's hand
@@ -221,7 +224,7 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
     cardPic.addEventListener('click', () => {
       if (selectedCardsArray.length < 3 || cardPic.style.border) {
         if (!cardPic.style.border) {
-          cardPic.style.border = '4px solid #17a2b8';
+          cardPic.style.border = '5px solid #007bff';
           selectedCardsArray.push(card);
         } else {
           cardPic.style.border = '';
@@ -254,6 +257,13 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
     // remove button and all the images
     cardPicContainer.innerHTML = '';
     faceDownBtnDiv.innerHTML = '';
+
+    // Update output message to waiting for other player
+    updateWaitingForPlayerMsg();
+
+    // Load spinning animation
+    loadSpinningAnimation();
+
     // resume refreshing gameplay
     refreshGamePlay();
 
@@ -316,17 +326,6 @@ const createStartBtn = () => {
   return startBtn;
 };
 
-// Create a refresh button
-const createRefreshBtn = () => {
-  const refreshBtn = document.createElement('button');
-  refreshBtn.innerHTML = 'Refresh';
-  refreshBtn.setAttribute('id', 'refresh-btn');
-  refreshBtn.classList.add('btn');
-  refreshBtn.classList.add('btn-light');
-  refreshBtn.addEventListener('click', refreshGameInfo);
-  return refreshBtn;
-};
-
 // Function that queries for all the relevant card divs on the table top
 const getAllCardDivs = () => {
   const loggedInPlayerFaceUpDiv = document.querySelector('.logged-in-player-face-up-cards ');
@@ -345,5 +344,4 @@ export {
   displaySetGameCardPicsAndBtn, displayTableTopAndBtns,
   setGame,
   refreshGameInfo, createStartBtn,
-  createRefreshBtn,
 };

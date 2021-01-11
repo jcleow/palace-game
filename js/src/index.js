@@ -3,7 +3,7 @@ import './styles.scss';
 
 // Import Helper Functions
 import {
-  createStartBtn, createRefreshBtn,
+  createStartBtn,
 } from './lib/gameExecutionLogic.js';
 import { displayLoginForm, createUserIdLabelAndLogOutBtnDisplay } from './lib/createLoginFormFn.js';
 import { updateUsersJoinedDiv } from './lib/updateHeaderDivFn.js';
@@ -31,7 +31,6 @@ const createGame = () => {
       currentGame = response.data;
       headerDiv.innerText = `${response.data.currentPlayerName} has joined the game`;
       gameInterface.appendChild(createStartBtn());
-      gameInterface.appendChild(createRefreshBtn());
       refreshGamePlay();
       return Promise.resolve(currentGame);
     })
@@ -86,7 +85,6 @@ const getAllAvailableGames = (clearIntervalRef) => {
                 // Display Start & Refresh Buttons
                 gameInterface.removeChild(gameButtonsDiv);
                 gameInterface.appendChild(createStartBtn());
-                gameInterface.appendChild(createRefreshBtn());
                 return axios.get(`/games/${ongoingGame.id}`);
               })
               .then((selectedGameResponse) => {
@@ -96,15 +94,10 @@ const getAllAvailableGames = (clearIntervalRef) => {
                 // Remove and reappend everytime a new game button is clicked
                 // (to prevent disabled deal button specific to a game)
                 const existingStartBtn = document.querySelector('#start-btn');
-                const existingRefreshBtn = document.querySelector('#refresh-btn');
 
                 if (existingStartBtn) {
                   gameInterface.removeChild(existingStartBtn);
                 }
-                if (existingRefreshBtn) {
-                  gameInterface.removeChild(existingRefreshBtn);
-                }
-                gameInterface.appendChild(createRefreshBtn());
                 updateUsersJoinedDiv(currGameRoundUsernames);
               })
               .catch((error) => { console.log(error); });
