@@ -5,7 +5,34 @@ const updateUsersJoinedDiv = (currGameRoundUsernames) => {
   currGameRoundUsernames.forEach((username) => {
     headerDiv.innerText += `${username} has joined the game \n`;
   });
+
+  // Enable Start Game button when more than 1 user has joined
+  const startGameBtn = document.querySelector('#start-btn');
+  if (startGameBtn.disabled && currGameRoundUsernames.length > 1) {
+    startGameBtn.disabled = false;
+  }
 };
+
+const updateSetGameInstructions = () => {
+  const headerDiv = document.querySelector('.header-div');
+  headerDiv.innerText = 'Please choose 3 cards to face up on the table';
+};
+
+const outputSetGameErrorMsgNotEnoughCards = () => {
+  const headerDiv = document.querySelector('.header-div');
+  headerDiv.innerText = 'You did not choose 3 cards. Please try again';
+};
+
+const outputSetGameErrorMsgTooManyCards = () => {
+  const headerDiv = document.querySelector('.header-div');
+  headerDiv.innerText = 'You cannot choose more than 3 cards. Please try again';
+};
+
+const updateWaitingForPlayerMsg = () => {
+  const headerDiv = document.querySelector('.header-div');
+  headerDiv.innerText = 'You have selected your 3 face up cards. Waiting for other player(s)';
+};
+
 // Update in header which player's turn it is with player's username
 const updatePlayerActionDiv = (currPlayer) => {
   const headerDiv = document.querySelector('.header-div');
@@ -17,4 +44,10 @@ const updateGameOverDiv = (winner) => {
   headerDiv.innerText = `${winner.username} is the winner!`;
 };
 
-export { updateUsersJoinedDiv, updatePlayerActionDiv, updateGameOverDiv };
+export {
+  updateUsersJoinedDiv, updateSetGameInstructions,
+  outputSetGameErrorMsgNotEnoughCards,
+  outputSetGameErrorMsgTooManyCards,
+  updateWaitingForPlayerMsg,
+  updatePlayerActionDiv, updateGameOverDiv,
+};

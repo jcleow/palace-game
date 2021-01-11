@@ -5,7 +5,7 @@ import './styles.scss';
 import {
   createStartBtn, createRefreshBtn,
 } from './lib/gameExecutionLogic.js';
-import { createLoginForm, createUserIdLabelAndLogOutBtnDisplay } from './lib/createLoginFormFn.js';
+import { displayLoginForm, createUserIdLabelAndLogOutBtnDisplay } from './lib/createLoginFormFn.js';
 import { updateUsersJoinedDiv } from './lib/updateHeaderDivFn.js';
 import { createNewGameBtn } from './lib/buttonCreationFn.js';
 import refreshGamePlay from './lib/refreshFn.js';
@@ -48,7 +48,7 @@ const createLoginFormOrUserInfo = () => {
       if (res.data.loggedInUserId) {
         createUserIdLabelAndLogOutBtnDisplay(loginContainer, res);
       } else {
-        createLoginForm(loginContainer);
+        displayLoginForm(loginContainer);
       }
     })
     .catch((error) => { console.log(error); });
@@ -59,15 +59,21 @@ const getAllAvailableGames = (clearIntervalRef) => {
   axios.get('/games')
     .then((onGoingGameResponses) => {
       gameButtonsDiv.innerHTML = '';
-      createNewGameBtn(gameButtonsDiv, createGame);
+
       // set loggedInUserId obtained from server
-      loggedInUserId = Number(onGoingGameResponses.data.loggedInUserId);
+      if (onGoingGameResponses.data.loggedInUserId) {
+        loggedInUserId = Number(onGoingGameResponses.data.loggedInUserId);
+        createNewGameBtn(gameButtonsDiv, createGame);
+      }
 
       // If there are more than 1 ongoing games, display these games
       if (onGoingGameResponses.data.allOngoingGamesArray) {
         onGoingGameResponses.data.allOngoingGamesArray.forEach((ongoingGame) => {
         // create a button that retrieves each of the ongoing games
           const gameButton = document.createElement('button');
+          gameButton.classList.add('game-btn');
+          gameButton.classList.add('btn');
+          gameButton.classList.add('btn-light');
           gameButton.innerText = `Game: ${ongoingGame.id}`;
           gameButtonsDiv.appendChild(gameButton);
 
@@ -84,7 +90,7 @@ const getAllAvailableGames = (clearIntervalRef) => {
                 return axios.get(`/games/${ongoingGame.id}`);
               })
               .then((selectedGameResponse) => {
-                const { currGameRoundDetails, currGameRoundUsernames } = selectedGameResponse.data;
+                const { currGameRoundUsernames } = selectedGameResponse.data;
                 refreshGamePlay();
                 // Display deal & refresh buttons
                 // Remove and reappend everytime a new game button is clicked

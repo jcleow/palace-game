@@ -395,6 +395,7 @@ export default function games(db) {
     } catch (error) {
       console.log(error);
     }
+
     res.send('no ongoing games/must be loggedin');
   };
 

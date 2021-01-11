@@ -1,5 +1,11 @@
 import axios from 'axios';
-import { updateUsersJoinedDiv, updatePlayerActionDiv, updateGameOverDiv } from './updateHeaderDivFn.js';
+import {
+  updateUsersJoinedDiv, updatePlayerActionDiv,
+  updateGameOverDiv, updateSetGameInstructions,
+  outputSetGameErrorMsgNotEnoughCards,
+  outputSetGameErrorMsgTooManyCards,
+  updateWaitingForPlayerMsg,
+} from './updateHeaderDivFn.js';
 import {
   renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand,
 } from './renderCardsFn.js';
@@ -21,6 +27,7 @@ const refreshGameInfo = (clearIntervalRef) => {
         updateUsersJoinedDiv(currGameRoundUsernames);
       } else if (currGameState === 'setGame') {
         clearInterval(clearIntervalRef);
+        updateSetGameInstructions();
         displaySetGameCardPicsAndBtn(response);
       } else if (currGameState === 'ongoing') {
         clearInterval(clearIntervalRef);
@@ -49,8 +56,6 @@ const displayTableTopAndBtns = () => {
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
       console.log(response.data, 'response-data');
-      // someFunction(response);
-
       // Classify the response data round details into
       // either logged-in player array or opponent hand array
       // Type array as it might be easier to track more than 2 players for opponent hands
@@ -196,18 +201,16 @@ const displayTableTopAndBtns = () => {
 // Logic for display all the 6 card pictures and relevant button for setting the faceup cards
 const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
   // First check if set-game-display has already been set up
-  const setGameContainer = document.querySelector('#set-game-container');
-  // If it has been set up then we can stop the rendering process
-  if (setGameContainer.innerHTML) {
+  // Query for the relevant divs to hold the pics
+  const cardPicContainer = document.querySelector('#card-pics-container');
+  const faceDownBtnDiv = document.querySelector('#face-down-btn-div');
+  // If set up already, refresh function shall not re-render/refresh
+  if (cardPicContainer.innerHTML && faceDownBtnDiv.innerHTML) {
     return;
   }
 
   const cardsInHand = JSON.parse(cardsInHandResponse.data.playerHand.cardsInHand);
-
-  // Create a container to hold the pics
-  const cardPicContainer = document.createElement('div');
   const selectedCardsArray = [];
-
   // Display a picture for each of the cards
   cardsInHand.forEach((card) => {
     const cardPic = document.createElement('img');
@@ -218,7 +221,7 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
     cardPic.addEventListener('click', () => {
       if (selectedCardsArray.length < 3 || cardPic.style.border) {
         if (!cardPic.style.border) {
-          cardPic.style.border = 'thick solid #0000FF';
+          cardPic.style.border = '4px solid #17a2b8';
           selectedCardsArray.push(card);
         } else {
           cardPic.style.border = '';
@@ -227,22 +230,30 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
         }
       } else {
         // To output this message in a graphical form later
-        console.log('You cannot choose more than 3 cards to faceup');
+        outputSetGameErrorMsgTooManyCards();
       }
     });
     cardPicContainer.appendChild(cardPic);
   });
 
   const faceDownBtn = document.createElement('button');
+  faceDownBtn.classList.add('btn');
+  faceDownBtn.classList.add('btn-light');
   faceDownBtn.innerText = 'Place Selected Cards on Table';
-  setGameContainer.innerHTML = '';
-  setGameContainer.appendChild(cardPicContainer);
-  setGameContainer.appendChild(faceDownBtn);
+
+  faceDownBtnDiv.appendChild(faceDownBtn);
 
   faceDownBtn.addEventListener('click', () => {
+    console.log(selectedCardsArray, 'selectedCardsArray');
+    if (selectedCardsArray.length < 3) {
+      // Output error message
+      outputSetGameErrorMsgNotEnoughCards();
+      return;
+    }
+
     // remove button and all the images
-    setGameContainer.removeChild(cardPicContainer);
-    setGameContainer.removeChild(faceDownBtn);
+    cardPicContainer.innerHTML = '';
+    faceDownBtnDiv.innerHTML = '';
     // resume refreshing gameplay
     refreshGamePlay();
 
@@ -281,6 +292,7 @@ const setGame = () => {
       return axios.get(`/games/${currentGame.id}/players/${Number(loggedInUserId)}`);
     })
     .then((cardsInHandResponse) => {
+      updateSetGameInstructions();
       displaySetGameCardPicsAndBtn(cardsInHandResponse);
     })
     .catch((error) => {
@@ -296,6 +308,10 @@ const createStartBtn = () => {
   const startBtn = document.createElement('button');
   startBtn.innerText = 'Start';
   startBtn.setAttribute('id', 'start-btn');
+  startBtn.classList.add('btn');
+  startBtn.classList.add('btn-light');
+  startBtn.classList.add('mr-2');
+  startBtn.disabled = true;
   startBtn.addEventListener('click', setGame);
   return startBtn;
 };
@@ -305,6 +321,8 @@ const createRefreshBtn = () => {
   const refreshBtn = document.createElement('button');
   refreshBtn.innerHTML = 'Refresh';
   refreshBtn.setAttribute('id', 'refresh-btn');
+  refreshBtn.classList.add('btn');
+  refreshBtn.classList.add('btn-light');
   refreshBtn.addEventListener('click', refreshGameInfo);
   return refreshBtn;
 };

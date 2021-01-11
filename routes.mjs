@@ -44,9 +44,6 @@ export default function routes(app) {
   // get selected game
   app.get('/games/:gameId', GamesController.show);
 
-  // // get selected game score
-  // app.get('/games/:id/score', GamesController.score);
-
   // get selected player's first 6 cards
   app.get('/games/:gameId/players/:playerId', GamesController.displaySetGameHand);
 

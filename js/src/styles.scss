@@ -1,5 +1,41 @@
 /** @format */
 
+body {
+  background-image: url("/public/pictures/palace.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-height: 1000px;
+}
+
+.header-top {
+  margin-top: 25px;
+}
+.user-profile {
+  display: none;
+}
+.profilePic {
+  height: 50px;
+  width: 50px;
+}
+
+.profilePicBtn:focus,
+.profilePicBtn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+#login-container {
+  margin-top: 150px;
+  justify-content: center;
+  align-items: center;
+  width: 300px;
+  height: auto;
+  border: solid 5px rgba(255, 255, 255, 0.619);
+  border-radius: 10px;
+  display: none;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 .card-pic {
   width: 100px;
   height: auto;
@@ -43,6 +79,10 @@
   display: none;
 }
 
+.valid-selection {
+  border: 5px thick solid #0000ff;
+}
+
 .invalid-selection {
   border: 5px #ff0000 solid;
   animation: blink 0.5s;
@@ -53,4 +93,31 @@
   50% {
     border-color: #fff;
   }
+}
+
+#user-dropdown-menu {
+  margin-right: 100px;
+}
+
+.game-btn {
+  margin: 10px;
+  width: 100px;
+}
+
+.game-buttons {
+  background-color: rgba(0, 0, 0, 0.1);
+  width: 300px;
+  border-radius: 15px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.header-text,
+.header-div {
+  color: white;
+}
+
+.new-game-btn {
+  margin-top: 15px;
+  margin-bottom: 10px;
 }

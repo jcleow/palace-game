@@ -8,6 +8,7 @@
     integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2"
     crossorigin="anonymous"
   />
+
   <script>
     // global value that holds info about the current hand.
     let currentGame = null;
@@ -15,7 +16,63 @@
     let loggedInUserId;
   </script>
   <body>
-    <div id="login-container"></div>
+    <div class="d-flex flex-row justify-content-end">
+      <div class="btn-group user-profile">
+        <a class="btn bg-transparent profilePicBtn">
+          <img
+            class="profilePic rounded-circle"
+            src="/icons/defaultprofilepic.jpg"
+          />
+        </a>
+        <button
+          type="button"
+          class="btn bg-transparent dropdown-toggle text-dark dropdown-toggle-split profilePicBtn"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          <span class="sr-only">Toggle Dropdown</span>
+        </button>
+        <div
+          class="dropdown-menu bg-transparent dropdown-menu-left"
+          id="user-dropdown-menu"
+        >
+          <a class="dropdown-item" id="logged-in-display"></a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" id="logout-btn" role="button">Logout</a>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="header-text text-center header-top">
+      Welcome to Palace - the Card Game!
+    </h3>
+    <div id="login-container" class="container">
+      <div class="form-group mt-3 mb-3">
+        <label class="text-white" for="exampleInputEmail1">Email address</label>
+        <input
+          class="form-control"
+          id="username"
+          aria-describedby="username"
+          placeholder="Enter your username"
+        />
+      </div>
+      <div class="form-group">
+        <label class="text-white" for="exampleInputPassword1">Password</label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          placeholder="Enter your password"
+        />
+      </div>
+      <div class="form-group d-flex justify-content-center mb-3">
+        <button id="login-btn" class="btn btn-primary mr-2">Login</button>
+        <button id="register-btn" class="btn btn-primary">Register</button>
+      </div>
+    </div>
+    <div id="logged-in-display" class="w-100 text-center"></div>
+    <div></div>
     <div id="game-container">
       <div
         class="container d-flex flex-row justify-content-center"
@@ -24,7 +81,7 @@
         <div class="game-buttons d-flex flex-column align-items-center"></div>
       </div>
       <div class="col d-flex flex-row justify-content-center">
-        <div class="header-div"></div>
+        <div class="header-div mt-2"></div>
       </div>
       <div class="container bg-secondary">
         <div class="row">
@@ -111,7 +168,28 @@
     <div id="set-game-container"></div>
     <!-- Append game buttons -->
     <div
-      class="container play-button-container d-flex justify-content-center"
-    ></div>
+      class="container play-button-container d-flex flex-column justify-content-center"
+    >
+      <div
+        id="card-pics-container"
+        class="d-flex flex-row justify-content-center"
+      ></div>
+      <div id="face-down-btn-div" class="text-center mt-2"></div>
+    </div>
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+      integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
+      integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s"
+      crossorigin="anonymous"
+    ></script>
   </body>
 </html>
