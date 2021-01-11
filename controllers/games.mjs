@@ -564,8 +564,11 @@ export default function games(db) {
 
       // Function scoped - Track the updated cards in hand
       let updatedCardsInHand = [];
+      updatedCardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
       let updatedFaceUpCards = [];
+      updatedFaceUpCards = JSON.parse(currUserGameRound[0].faceUpCards);
       let updatedFaceDownCards = [];
+      updatedFaceDownCards = JSON.parse(currUserGameRound[0].faceDownCards);
 
       // Function scoped - Track if four of a kind is played
       let isFourOfAKindPlayed = false;

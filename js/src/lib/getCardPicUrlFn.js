@@ -1,5 +1,9 @@
 // Function that generates the path to each individual card
 const getCardPicUrl = (card) => {
+  if (card === null) {
+    return;
+  }
+
   let imgSrc = '';
 
   // get directory for each of the cards
