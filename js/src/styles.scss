@@ -72,8 +72,8 @@ body {
 .table-top {
   position: relative;
   min-height: 637px;
-  background-color: lightblue;
-  border-radius: 5px;
+  background-color: #131a1cad;
+  border-radius: 50px;
 }
 .table-top-display {
   display: none;
@@ -120,6 +120,10 @@ body {
 .new-game-btn {
   margin-top: 15px;
   margin-bottom: 10px;
+}
+
+.opponent-private-hand {
+  background-color: rgba(255, 152, 4, 0.59);
 }
 
 // CSS for spinner animation

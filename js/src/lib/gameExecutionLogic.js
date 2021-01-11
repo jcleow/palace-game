@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {
+  updateGameRoomNumber,
   updateUsersJoinedDiv, updatePlayerActionDiv,
   updateGameOverDiv, updateSetGameInstructions,
   outputSetGameErrorMsgNotEnoughCards,
@@ -7,6 +8,7 @@ import {
   updateWaitingForPlayerMsg,
   loadSpinningAnimation,
   removeSpinningAnimation,
+  outputSetUpGameText, removeSetUpGameMsg,
 } from './updateHeaderDivFn.js';
 import {
   renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand,
@@ -21,11 +23,12 @@ const refreshGameInfo = (clearIntervalRef) => {
   console.log('gameIsRefreshed');
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
-      const { gameState: currGameState } = response.data.currGame;
+      const { id: gameId, gameState: currGameState } = response.data.currGame;
       const { currGameRoundUsernames, currPlayer } = response.data;
 
       if (currGameState === 'waiting') {
         // update users who have joined the game
+        updateGameRoomNumber(gameId);
         updateUsersJoinedDiv(currGameRoundUsernames);
       } else if (currGameState === 'setGame') {
         clearInterval(clearIntervalRef);
@@ -34,6 +37,7 @@ const refreshGameInfo = (clearIntervalRef) => {
       } else if (currGameState === 'ongoing') {
         clearInterval(clearIntervalRef);
         removeSpinningAnimation();
+        removeSetUpGameMsg();
         // Update to see who is the current user(name) to play
         updatePlayerActionDiv(currPlayer);
         // Display all the cards on the table as well as cards in each player's hand
@@ -203,6 +207,8 @@ const displayTableTopAndBtns = () => {
 
 // Logic for display all the 6 card pictures and relevant button for setting the faceup cards
 const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
+  // Change header to reflect the game being setting up
+  outputSetUpGameText();
   // First check if set-game-display has already been set up
   // Query for the relevant divs to hold the pics
   const cardPicContainer = document.querySelector('#card-pics-container');
@@ -224,7 +230,7 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
     cardPic.addEventListener('click', () => {
       if (selectedCardsArray.length < 3 || cardPic.style.border) {
         if (!cardPic.style.border) {
-          cardPic.style.border = '5px solid #007bff';
+          cardPic.style.border = '5px solid #0000FF';
           selectedCardsArray.push(card);
         } else {
           cardPic.style.border = '';
@@ -279,6 +285,7 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
         if (currentGameResponse) {
           // Render the pictures on the table
           displayTableTopAndBtns();
+          removeSetUpGameMsg();
         }
       })
       .catch((error) => {
@@ -293,6 +300,9 @@ const setGame = () => {
     .then((response) => {
       currentGame = response.data;
       loggedInUserId = Number(response.data.loggedInUserId);
+
+      // Update the game room number
+      updateGameRoomNumber(currentGame.id);
       // remove start game button
       const startGameBtn = document.querySelector('#start-btn');
       const gameInterface = document.querySelector('#game-interface');

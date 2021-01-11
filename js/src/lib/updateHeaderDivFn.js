@@ -1,4 +1,9 @@
 // Update in header div which players have joined
+const updateGameRoomNumber = (gameId) => {
+  const headLineElement = document.querySelector('.header-text');
+  headLineElement.innerText = `Game Room: ${gameId}`;
+};
+
 const updateUsersJoinedDiv = (currGameRoundUsernames) => {
   const headerDiv = document.querySelector('.header-div');
   headerDiv.innerHTML = '';
@@ -44,8 +49,8 @@ const removeSpinningAnimation = () => {
 };
 // Update in header which player's turn it is with player's username
 const updatePlayerActionDiv = (currPlayer) => {
-  const headerDiv = document.querySelector('.header-div');
-  headerDiv.innerText = `It's ${currPlayer.username}'s turn`;
+  const headLineElement = document.querySelector('.header-div');
+  headLineElement.innerText = `It's ${currPlayer.username}'s turn`;
 };
 
 const updateGameOverDiv = (winner) => {
@@ -53,11 +58,23 @@ const updateGameOverDiv = (winner) => {
   headerDiv.innerText = `${winner.username} is the winner!`;
 };
 
+const outputSetUpGameText = () => {
+  const headLineElement = document.querySelector('.header-text');
+  headLineElement.innerHTML = 'Setting Up the Game...';
+};
+
+const removeSetUpGameMsg = () => {
+  const headLineElement = document.querySelector('.header-text');
+  headLineElement.innerHTML = '';
+};
+
 export {
+  updateGameRoomNumber,
   updateUsersJoinedDiv, updateSetGameInstructions,
   outputSetGameErrorMsgNotEnoughCards,
   outputSetGameErrorMsgTooManyCards,
   updateWaitingForPlayerMsg,
   updatePlayerActionDiv, updateGameOverDiv,
   loadSpinningAnimation, removeSpinningAnimation,
+  outputSetUpGameText, removeSetUpGameMsg,
 };
