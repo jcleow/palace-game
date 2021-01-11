@@ -119,7 +119,6 @@ const switchPlayerTurn = async (currGame, db) => {
 
     // // Convert to number...
     const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
-    console.log(currPlayerNum, 'currPlayerNum');
 
     // Get Next Turn Num
     let nextPlayerNum;
@@ -136,8 +135,6 @@ const switchPlayerTurn = async (currGame, db) => {
       const nextPlayerIdArray = Object.values(nextPlayerIdObj);
       nextPlayerId = nextPlayerIdArray[0];
     }
-    console.log(nextPlayerNum, 'nextPlayerNum -string');
-    console.log(nextPlayerId, 'nextPlayerId-integer');
 
     // Get next player instance and send the response
     currPlayer = await db.User.findByPk(nextPlayerId);
@@ -191,7 +188,6 @@ export default function games(db) {
       await db.GamesUser.create(newGameRound);
 
       const currentPlayer = await db.User.findByPk(req.loggedInUserId);
-      console.log(currentPlayer, 'currentPlayer');
 
       // send the new game back to the user.
       // dont include the deck so the user can't cheat
@@ -329,10 +325,8 @@ export default function games(db) {
             GameId: req.params.gameId,
           },
         });
-        console.log(currPlayerGameRound, 'currPlayerGameRound');
 
         if (currPlayerGameRound[0].faceUpCards === null) {
-          console.log('test-1');
           res.redirect(`/games/${req.params.gameId}/players/${req.loggedInUserId}`);
         } else {
           res.send({ message: 'waiting for other players' });
@@ -447,7 +441,6 @@ export default function games(db) {
         // We remove it
         if (indexOfFaceUpCard > -1) {
           existingPlayerCardsInHand.splice(indexOfFaceUpCard, 1);
-          console.log(existingPlayerCardsInHand, 'spliced hand');
         }
       });
       playerHand.cardsInHand = JSON.stringify(existingPlayerCardsInHand);
@@ -537,10 +530,7 @@ export default function games(db) {
       const currGame = await db.Game.findByPk(req.params.gameId);
       // This refers to the positions of the cards
       // that were selected for play, stored in an array
-      console.log(req.body, 'req-body');
       const { selectedCardsPlayedPositionArray: positionOfCardsPlayedArray, cardType } = req.body;
-      console.log(positionOfCardsPlayedArray, 'position of cards played');
-      console.log(cardType, 'cardType');
       const currUserGameRound = await currGame.getGamesUsers({
         where: {
           UserId: req.params.playerId,
@@ -560,7 +550,6 @@ export default function games(db) {
       // Since there are 3 types of cards, we need to make sure which type we are selecting
       // Get the type of card played (cardsInHand, faceUpCard, faceDownCard etc)
       const typeOfCardsPlayed = JSON.parse(currUserGameRound[0][cardType]);
-      console.log(typeOfCardsPlayed, 'original cardsInHand');
 
       // Function scoped - Track the updated cards in hand
       let updatedCardsInHand = [];
@@ -601,10 +590,6 @@ export default function games(db) {
           // E.g index 1 and 2 of the cardInHand are selected, we compare
           // card at index 2 against card against index 1
             if (indexOfCardPosition + 1 <= positionOfCardsPlayedArray.length - 1) {
-              console.log('card1', typeOfCardsPlayed[positionOfCardsPlayedArray[indexOfCardPosition]]);
-              console.log(positionOfCardsPlayedArray[indexOfCardPosition], 'posNo-1');
-              console.log('card2', typeOfCardsPlayed[positionOfCardsPlayedArray[indexOfCardPosition + 1]]);
-              console.log(positionOfCardsPlayedArray[indexOfCardPosition], 'posNo-2');
               if ((typeOfCardsPlayed[positionOfCardsPlayedArray[indexOfCardPosition]].rank)
               !== (typeOfCardsPlayed[positionOfCardsPlayedArray[indexOfCardPosition + 1]].rank)
               ) {
@@ -613,7 +598,6 @@ export default function games(db) {
             }
           });
           if (!areCardsTheSame) {
-            console.log('cards are not the same');
             return;
           }
         }
@@ -631,16 +615,10 @@ export default function games(db) {
               // An error has occured as the client side should not
               // have sent invalid cardsInHand/faceUpCards
               if (cardType !== 'faceDownCards') {
-                console.log(typeOfCardsPlayed[positionOfCardsPlayedArray[0]], 'selected card');
-                console.log(topDiscardedCard, 'topDiscardedCard');
-                console.log('selected card(s) is not larger discarded card and is not a wildcard');
                 return;
               }
               // As client side should not perform validation on face down cards, we check
               // if it is a valid move here
-              console.log(typeOfCardsPlayed[positionOfCardsPlayedArray[0]], 'selected card');
-              console.log(topDiscardedCard, 'topDiscardedCard');
-              console.log('selected facedowncard(s) is not larger discarded card and is not a wildcard');
               isFaceDownCardSmallerThanTopDiscardedCard = true;
             }
           }
@@ -649,9 +627,7 @@ export default function games(db) {
         // If it passes test 1 and 2, means the selected cards can be pushed into the discardPile
         positionOfCardsPlayedArray.forEach((position) => {
           discardPile.push(typeOfCardsPlayed[position]);
-          console.log(discardPile, 'pushed in a new card');
         });
-        console.log(discardPile, 'discardPile');
 
         // Special case if wildcard 10 is played, remove all the discardPile
         if (typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank === 10) {
@@ -661,17 +637,13 @@ export default function games(db) {
         // Special case if 4 of a kind are played in a row, remove all the discardPile
         let numOfTimesSameConsecutiveCards = 0;
         if (discardPile.length > 3) {
-          console.log('start checking for 4 of a kind');
           // Start looping from the second last index
           for (let i = 1; i < 4; i += 1) {
-            console.log('checking -1');
             // Compare against the second last index against the last index / compare backwards
             if (discardPile[discardPile.length - i - 1].rank === discardPile[discardPile.length - i].rank) {
-              console.log('checking -2');
               numOfTimesSameConsecutiveCards += 1;
-              console.log(numOfTimesSameConsecutiveCards, 'numOfConsect');
+
               if (numOfTimesSameConsecutiveCards === 3) {
-                console.log('checking -3 confirm 4 of a kind');
                 isFourOfAKindPlayed = true;
                 // remove all cards in discardPile
                 discardPile.length = 0;
@@ -683,13 +655,10 @@ export default function games(db) {
         // Special case if a face down card is played and is smaller than the top
         // discarded pile && it has not been removed by wildcard 10 or 4 of a kind
         if (isFaceDownCardSmallerThanTopDiscardedCard && discardPile.length > 0) {
-          console.log(discardPile, 'discardPile-facedown');
           // Perform a deep copy of the existing discardPile...
           updatedCardsInHand = JSON.parse(JSON.stringify(discardPile));
           // Before erasing the contents inside discardPile
           discardPile.length = 0;
-          console.log('all facedown cards & discardPile cards are pushed into user\'s hand');
-          console.log(updatedCardsInHand, 'deepcopy');
         }
 
         // Remove the played cards from the type of hand
@@ -711,7 +680,6 @@ export default function games(db) {
           }
         }
       }
-      console.log(updatedCardsInHand, 'updatedCardsInHand-2');
 
       // Update the state in selectedGameRound and currGame card JSONs in DB
       currGame.discardPile = JSON.stringify(discardPile);
@@ -783,7 +751,6 @@ export default function games(db) {
 
   // When user abandons a game
   const abandonGame = async (req, res) => {
-    console.log(req.params.gameId, 'gameId-test');
     const currGame = await db.Game.findByPk(req.params.gameId);
     currGame.gameState = 'abandoned';
     await currGame.save();
