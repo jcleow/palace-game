@@ -191,6 +191,13 @@ const renderCardsInHand = (selectedPlayerHandArray,
   }
 };
 
+const renderHandLabels = () => {
+  const userHandLabel = document.querySelector('.user-hand-label');
+  userHandLabel.innerHTML = '<i>Your Hand</i>';
+  const opponentHandLabel = document.querySelector('.opponent-hand-label');
+  opponentHandLabel.innerHTML = '<i>Opponent\'s Hand</i>';
+};
+
 export {
-  renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand,
+  renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand, renderHandLabels,
 };

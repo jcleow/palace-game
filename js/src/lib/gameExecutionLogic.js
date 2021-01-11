@@ -11,7 +11,8 @@ import {
   outputSetUpGameText, removeSetUpGameMsg, outputGameAbandonedMsg,
 } from './updateHeaderDivFn.js';
 import {
-  renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand,
+  renderFaceDownCards, renderFaceUpCards, renderMiscCards,
+  renderOpponentHand, renderCardsInHand, renderHandLabels,
 } from './renderCardsFn.js';
 import { createPlayBtn } from './buttonCreationFn.js';
 import getCardPicUrl from './getCardPicUrlFn.js';
@@ -142,6 +143,9 @@ const displayTableTopAndBtns = () => {
       // Render draw pile and discard pile
       renderMiscCards(drawPile, discardPile, centerMiscCardsDiv);
 
+      // Render user and opponent hand labels
+      renderHandLabels();
+
       // Since user can choose to play either cardsInHand, faceUpCards, faceDownCards
       // we need to distinguish which cards to send to the server
       let selectedCardsPlayedPositionArray;
@@ -190,6 +194,7 @@ const displayTableTopAndBtns = () => {
         if (currGame.gameState !== 'gameOver') {
           refreshGamePlay();
         }
+        // loadSpinningAnimation();
         const playBtnContainer = document.querySelector('.play-button-container');
         let playBtn = document.querySelector('#play-btn');
         if (!playBtn) {

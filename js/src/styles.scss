@@ -10,11 +10,13 @@ body {
   height: 64px;
 }
 
-.header-top {
+.header-text {
   margin-top: 25px;
+  color: white;
+  font-family: "Dancing Script", cursive;
+  font-size: 3.5rem;
 }
 
-.header-text,
 .header-div {
   color: white;
 }
