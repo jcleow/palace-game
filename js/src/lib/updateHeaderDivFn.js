@@ -70,7 +70,7 @@ const removeSetUpGameMsg = () => {
 
 const outputGameAbandonedMsg = () => {
   const headerDiv = document.querySelector('.header-div');
-  headerDiv.innerText = 'Game has been abandoned by other player(s). You win.';
+  headerDiv.innerHTML = 'Game has been abandoned by other player(s). You win.';
 };
 export {
   updateGameRoomNumber,

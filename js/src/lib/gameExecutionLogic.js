@@ -24,7 +24,7 @@ const refreshGameInfo = (clearIntervalRef) => {
     .then((response) => {
       const { id: gameId, gameState: currGameState } = response.data.currGame;
       const { currGameRoundUsernames, currPlayer } = response.data;
-
+      console.log(currGameState, 'test-1000');
       if (currGameState === 'waiting') {
         // update users who have joined the game
         updateGameRoomNumber(gameId);
@@ -48,6 +48,7 @@ const refreshGameInfo = (clearIntervalRef) => {
         const { winner } = response.data;
         updateGameOverDiv(winner);
       } else if (currGameState === 'abandoned') {
+        console.log('test-53');
         outputGameAbandonedMsg();
       }
     })
@@ -103,19 +104,16 @@ const displayTableTopAndBtns = () => {
       const selectedCardsInHandArray = [];
       // Keep track of the position of loggedInUser's selected cardsInHand to play
       const selectedCardsInHandPositionArray = [];
-      console.log(selectedCardsInHandPositionArray, 'cards in hand pos array');
 
       // Keep track of loggedInUser's selected FaceUpCards to play
       const selectedFaceUpCardsArray = [];
       // Keep track of the position of loggedInUser's selected FaceUpCards to play
       const selectedFaceUpCardsPositionArray = [];
-      console.log(selectedFaceUpCardsPositionArray, 'face up cards pos array');
 
       // Keep track of loggedInUser's selected FaceDownCards to play
       const selectedFaceDownCardsArray = [];
       // Keep track of the position of loggedInUser's selected FaceDownCards to play
       const selectedFaceDownCardsPositionArray = [];
-      console.log(selectedFaceDownCardsPositionArray, 'face down cards pos array');
 
       // Render opponent player's private hand
       renderOpponentHand(opponentHands, opponentHandDiv);
@@ -148,8 +146,7 @@ const displayTableTopAndBtns = () => {
       // we need to distinguish which cards to send to the server
       let selectedCardsPlayedPositionArray;
       let cardType;
-      console.log(selectedCardsInHandPositionArray, 'selectedCardsInHandPosArray');
-      console.log(selectedCardsInHandPositionArray.length, 'length');
+
       if (cardsInHand.length > 0) {
         selectedCardsPlayedPositionArray = selectedCardsInHandPositionArray;
         cardType = 'cardsInHand';
@@ -178,9 +175,6 @@ const displayTableTopAndBtns = () => {
         }
 
         playBtn.addEventListener('click', () => {
-          console.log('clicked once');
-          console.log(selectedCardsInHandPositionArray, 'selected position array');
-
           axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`,
             { selectedCardsPlayedPositionArray, cardType })
             .then((playCardsResponse) => {
@@ -254,7 +248,6 @@ const displaySetGameCardPicsAndBtn = (cardsInHandResponse) => {
   faceDownBtnDiv.appendChild(faceDownBtn);
 
   faceDownBtn.addEventListener('click', () => {
-    console.log(selectedCardsArray, 'selectedCardsArray');
     if (selectedCardsArray.length < 3) {
       // Output error message
       outputSetGameErrorMsgNotEnoughCards();
