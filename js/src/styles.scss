@@ -10,6 +10,12 @@ body {
 .header-top {
   margin-top: 25px;
 }
+
+.header-text,
+.header-div {
+  color: white;
+}
+
 .user-profile {
   display: none;
 }
@@ -112,11 +118,6 @@ body {
   margin-bottom: 10px;
 }
 
-.header-text,
-.header-div {
-  color: white;
-}
-
 .new-game-btn {
   margin-top: 15px;
   margin-bottom: 10px;
@@ -124,6 +125,13 @@ body {
 
 .opponent-private-hand {
   background-color: rgba(255, 152, 4, 0.59);
+}
+
+.play-button-container {
+  min-height: 100px;
+}
+#play-btn {
+  height: 50px;
 }
 
 // CSS for spinner animation
