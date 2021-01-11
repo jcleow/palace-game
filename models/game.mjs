@@ -31,7 +31,7 @@ export default function gameModel(sequelize, DataTypes) {
       },
     },
     gameState: {
-      type: DataTypes.ENUM('waiting', 'setGame', 'begin', 'ongoing', 'finished'),
+      type: DataTypes.ENUM('waiting', 'setGame', 'ongoing', 'gameOver', 'abandoned'),
     },
     createdAt: {
       allowNull: false,

@@ -776,8 +776,14 @@ export default function games(db) {
     }
   };
 
-  // return all functions we define in an object
-  // refer to the routes file above to see this used
+  // When user abandons a game
+  const abandonGame = async (req, res) => {
+    console.log(req.params.gameId, 'gameId-test');
+    const currGame = await db.Game.findByPk(req.params.gameId);
+    currGame.gameState = 'abandoned';
+    await currGame.save();
+    res.send('Updated game state to abandoned');
+  };
   return {
     create,
     index,
@@ -787,5 +793,6 @@ export default function games(db) {
     updateCardsAfterSetGame,
     join,
     play,
+    abandonGame,
   };
 }

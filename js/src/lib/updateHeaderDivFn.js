@@ -68,6 +68,10 @@ const removeSetUpGameMsg = () => {
   headLineElement.innerHTML = '';
 };
 
+const outputGameAbandonedMsg = () => {
+  const headerDiv = document.querySelector('.header-div');
+  headerDiv.innerText = 'Game has been abandoned by other player(s). You win.';
+};
 export {
   updateGameRoomNumber,
   updateUsersJoinedDiv, updateSetGameInstructions,
@@ -76,5 +80,5 @@ export {
   updateWaitingForPlayerMsg,
   updatePlayerActionDiv, updateGameOverDiv,
   loadSpinningAnimation, removeSpinningAnimation,
-  outputSetUpGameText, removeSetUpGameMsg,
+  outputSetUpGameText, removeSetUpGameMsg, outputGameAbandonedMsg,
 };

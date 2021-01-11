@@ -39,9 +39,10 @@ export default function users(db) {
   // Get the user's loggedInUserId from cookies
   const show = async (req, res) => {
     if (req.cookies) {
+      console.log(req.loggedInUsername, 'test-333');
       res.send({
         loggedInUserId: Number(req.cookies.loggedInUserId),
-        username: req.loggedInUsername,
+        loggedInUsername: req.loggedInUsername,
       });
       return;
     }

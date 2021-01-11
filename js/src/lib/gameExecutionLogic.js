@@ -8,7 +8,7 @@ import {
   updateWaitingForPlayerMsg,
   loadSpinningAnimation,
   removeSpinningAnimation,
-  outputSetUpGameText, removeSetUpGameMsg,
+  outputSetUpGameText, removeSetUpGameMsg, outputGameAbandonedMsg,
 } from './updateHeaderDivFn.js';
 import {
   renderFaceDownCards, renderFaceUpCards, renderMiscCards, renderOpponentHand, renderCardsInHand,
@@ -20,7 +20,6 @@ import refreshGamePlay from './refreshFn.js';
 
 // Business logic that gets the existing state of the game from the table through AJAX
 const refreshGameInfo = (clearIntervalRef) => {
-  console.log('gameIsRefreshed');
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
       const { id: gameId, gameState: currGameState } = response.data.currGame;
@@ -37,7 +36,6 @@ const refreshGameInfo = (clearIntervalRef) => {
       } else if (currGameState === 'ongoing') {
         clearInterval(clearIntervalRef);
         removeSpinningAnimation();
-        // removeSetUpGameMsg();
         updateGameRoomNumber(gameId);
         // Update to see who is the current user(name) to play
         updatePlayerActionDiv(currPlayer);
@@ -49,6 +47,8 @@ const refreshGameInfo = (clearIntervalRef) => {
         displayTableTopAndBtns();
         const { winner } = response.data;
         updateGameOverDiv(winner);
+      } else if (currGameState === 'abandoned') {
+        outputGameAbandonedMsg();
       }
     })
     .catch((error) => {

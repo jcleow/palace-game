@@ -57,7 +57,7 @@ module.exports = {
         },
       },
       gameState: {
-        type: Sequelize.ENUM('waiting', 'setGame', 'ongoing', 'gameOver'),
+        type: Sequelize.ENUM('waiting', 'setGame', 'ongoing', 'gameOver', 'abandoned'),
       },
       createdAt: {
         allowNull: false,

@@ -29,6 +29,7 @@ export default function routes(app) {
       req.middlewareLoggedIn = true;
       req.loggedInUserId = Number(req.cookies.loggedInUserId);
       req.loggedInUsername = chosenUser.username;
+      console.log(req.loggedInUsername, 'app-use-username');
       next();
       return;
     }
@@ -60,6 +61,8 @@ export default function routes(app) {
   app.put('/games/:id/setGame', GamesController.setGame);
   // To insert into GamesUsers table when another player joins the game
   app.post('/games/:gameId/join/:playerId', GamesController.join);
+
+  app.put('/games/:gameId/abandoned', GamesController.abandonGame);
 
   const UsersController = users(db);
   app.get('/user', UsersController.show);

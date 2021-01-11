@@ -58,19 +58,21 @@ const displayLoginForm = (loginContainer) => {
 
 const createUserProfile = (response) => {
   // Create the userId display and logout btn
+  console.log(response, 'response');
   const userIdLabel = document.querySelector('#logged-in-display');
   userIdLabel.innerHTML = `Logged in as ${response.data.loggedInUsername}`;
   const logoutBtn = document.getElementById('logout-btn');
-  const loginFormContainer = document.querySelector('#login-container');
-  const userProfile = document.querySelector('.user-profile');
+  // const loginFormContainer = document.querySelector('#login-container');
+  // const userProfile = document.querySelector('.user-profile');
 
   // If the user chooses to log out...
   logoutBtn.addEventListener('click', () => {
+    // Perform a refresh of the page
+
     axios.put('/user/logout')
       .then(() => {
-        // Re-display login form and turn off userprofile display
-        userProfile.style.display = 'none';
-        loginFormContainer.style.display = 'block';
+        // Re-display login form and turn off userprofile display by refreshing page
+        window.location = '/';
       })
       .catch((error) => { console.log(error); });
   });
