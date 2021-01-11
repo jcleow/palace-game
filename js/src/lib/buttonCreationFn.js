@@ -24,8 +24,9 @@ const createPlayBtn = (playBtnContainer) => {
 const setGameStateToAbandoned = (gameId) => {
   console.log(`/games/${Number(gameId)}/abandoned`);
   axios.put(`/games/${Number(gameId)}/abandoned`)
-    .then(() => {
+    .then((response) => {
       window.location = '/';
+      console.log(response, 'abandon game response');
     })
     .catch((error) => { console.log(error); });
 };

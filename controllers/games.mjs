@@ -368,6 +368,8 @@ export default function games(db) {
       } else if (currGame.gameState === 'gameOver') {
         const winner = await currGame.getWinner();
         res.send({ currGameRoundDetails, currGame, winner });
+      } else if (currGame.gameState === 'abandoned') {
+        res.send({ currGameRoundDetails, currGame });
       }
     } catch (error) {
       console.log(error);
