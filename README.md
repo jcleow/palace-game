@@ -34,3 +34,5 @@ The fun happens when you or someone else is forced to pick up the discard pile b
 3. During a player’s turn without a draw pile and don’t have a hand, play one card from the face-up cards, if you have multiple cards of the same rank like 2 Jacks, you can play them both at the same time
 4. After the face up cards are all utilized, play the face-down cards. If it plays on the current card by being equal or higher, it can be played. If not you must pick up the entire discard pile.
 5. Play all of your cards first to win
+
+Adapted from https://www.wikihow.com/Play-the-Palace-Card-Game
