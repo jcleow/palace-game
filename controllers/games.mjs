@@ -553,7 +553,6 @@ export default function games(db) {
 
       // Function scoped - Track the updated cards in hand
       let updatedCardsInHand = JSON.parse(currUserGameRound[0].cardsInHand);
-      updatedCardsInHand.sort((cardA, cardB) => cardA.rank - cardB.rank);
       let updatedFaceUpCards = JSON.parse(currUserGameRound[0].faceUpCards);
       let updatedFaceDownCards = JSON.parse(currUserGameRound[0].faceDownCards);
 

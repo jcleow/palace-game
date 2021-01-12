@@ -58,7 +58,6 @@ const displayLoginForm = (loginContainer) => {
 
 const createUserProfile = (response) => {
   // Create the userId display and logout btn
-  console.log(response, 'response');
   const userIdLabel = document.querySelector('#logged-in-display');
   userIdLabel.innerHTML = `Logged in as ${response.data.loggedInUsername}`;
   const logoutBtn = document.getElementById('logout-btn');

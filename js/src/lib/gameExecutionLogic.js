@@ -25,7 +25,6 @@ const refreshGameInfo = (clearIntervalRef) => {
     .then((response) => {
       const { id: gameId, gameState: currGameState } = response.data.currGame;
       const { currGameRoundUsernames, currPlayer } = response.data;
-      console.log(currGameState, 'test-1000');
       if (currGameState === 'waiting') {
         // update users who have joined the game
         updateGameRoomNumber(gameId);
@@ -49,7 +48,6 @@ const refreshGameInfo = (clearIntervalRef) => {
         const { winner } = response.data;
         updateGameOverDiv(winner);
       } else if (currGameState === 'abandoned') {
-        console.log('test-53');
         outputGameAbandonedMsg();
       }
     })
@@ -65,7 +63,6 @@ const displayTableTopAndBtns = () => {
   // get all the faceUpCards from database and create it here
   axios.get(`/games/${currentGame.id}`)
     .then((response) => {
-      console.log(response.data, 'response-data');
       // Classify the response data round details into
       // either logged-in player array or opponent hand array
       // Type array as it might be easier to track more than 2 players for opponent hands

@@ -103,7 +103,6 @@ const renderFaceUpCards = (selectedPlayerHandArray,
       if (drawPile) {
         // If drawPile and selectedPlayerHandArray is empty, activate Face up cards
         if (drawPile.length === 0 && cardsInHand.length === 0) {
-          console.log('eventListeners Added');
           cardImg.addEventListener('click', () => {
             selectCardsToPlay(selectedCardsPositionArray, selectedCardsArray,
               faceUpCardIndex, cardImg, faceUpCard, topDiscardedCard);
@@ -154,7 +153,6 @@ const renderMiscCards = (drawPile, discardPile, selectedDivToAppendTo) => {
   }
 
   // Rendering discard pile picture if it is more than 1
-  console.log(discardPile, 'discardPileArray');
   if (discardPile.length > 0) {
     const discardedCardImg = document.createElement('img');
     discardedCardImg.src = getCardPicUrl(discardPile[discardPile.length - 1]);
@@ -179,7 +177,6 @@ const renderCardsInHand = (selectedPlayerHandArray,
   // Clear everything in the existing div and re-add in new cards
   selectedDivToAppendTo.innerHTML = '';
   const cardsInHand = JSON.parse(selectedPlayerHandArray[0].cardsInHand);
-  console.log(cardsInHand.length, 'cardsInHand length');
   if (cardsInHand.length > 0) {
     cardsInHand.forEach((cardInHand, cardIndex) => {
       const cardImg = document.createElement('img');
