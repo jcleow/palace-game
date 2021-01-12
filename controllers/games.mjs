@@ -104,50 +104,49 @@ const getDiscardedPile = (currGame) => {
 };
 
 // Switch player turn helper
-const switchPlayerTurn = async (currGame, db) => {
+const switchPlayerTurn = async (currGame, db, cardPlayed) => {
   // Make current player function scoped
   let currPlayer;
+
+  // Get Current Player ID
+  const currPlayerId = currGame.CurrentPlayerId;
+
+  // Get All player sequences
+  const playerSequence = JSON.parse(currGame.playerSequence);
+
+  // Get Current Turn Num
+  const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
+
+  // Convert to number...
+  const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
+
+  // Get Next Turn Num
+  let nextPlayerNum;
+  let nextPlayerId;
+  // if exceed num. of players means player 1 goes again
+  if (currPlayerNum + 1 > playerSequence.length) {
+    nextPlayerNum = '1';
+    const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+    const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+    nextPlayerId = nextPlayerIdArray[0];
+  } else {
+    nextPlayerNum = (currPlayerNum + 1).toString();
+    const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
+    const nextPlayerIdArray = Object.values(nextPlayerIdObj);
+    nextPlayerId = nextPlayerIdArray[0];
+  }
   try {
-    // Get Current Player ID
-    const currPlayerId = currGame.CurrentPlayerId;
-
-    // Get All player sequences
-    const playerSequence = JSON.parse(currGame.playerSequence);
-
-    // Get Current Turn Num
-    const currPlayerNumArray = playerSequence.filter((record) => Object.values(record).includes(currPlayerId));
-
-    // // Convert to number...
-    const currPlayerNum = Number(Object.keys(currPlayerNumArray[0])[0]);
-
-    // Get Next Turn Num
-    let nextPlayerNum;
-    let nextPlayerId;
-    // if exceed num. of players means player 1 goes again
-    if (currPlayerNum + 1 > playerSequence.length) {
-      nextPlayerNum = '1';
-      const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-      const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-      nextPlayerId = nextPlayerIdArray[0];
-    } else {
-      nextPlayerNum = (currPlayerNum + 1).toString();
-      const nextPlayerIdObj = playerSequence.find((record) => record.hasOwnProperty(nextPlayerNum));
-      const nextPlayerIdArray = Object.values(nextPlayerIdObj);
-      nextPlayerId = nextPlayerIdArray[0];
-    }
-
     // Get next player instance and send the response
     currPlayer = await db.User.findByPk(nextPlayerId);
 
-    // // Change Player Turn by using associative method
-    // await currPlayer.addCurrentPlayerTurns(currGame);
-
     currGame.CurrentPlayerId = nextPlayerId;
     await currGame.save();
+    return {
+      currGame, currPlayer, message: 'update completed', cardPlayed,
+    };
   } catch (error) {
     console.log(error);
   }
-  return { currGame, currPlayer, message: 'update completed' };
 };
 /*
  * ========================================================
@@ -721,26 +720,22 @@ export default function games(db) {
       }
 
       // *********** Switch Player Turn Logic ************//
-      // When cards other than 10 is played, and 4 of a kind is NOT played consecutively
+      // When cards 10, and 4 of a kind is played consecutively
       // we switch players
       if (positionOfCardsPlayedArray.length > 0) {
-        if (typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank !== 10 && isFourOfAKindPlayed === false) {
-          const result = await switchPlayerTurn(currGame, db);
-          res.send(result);
+        if (typeOfCardsPlayed[positionOfCardsPlayedArray[0]].rank === 10 || isFourOfAKindPlayed === true) {
+          // Otherwise when wild card 10 is played, we do not switch players
+          const currPlayer = await currUserGameRound[0].getUser();
+          res.send({
+            currGame, currPlayer, message: 'update completed with a wild card played', cardPlayed: typeOfCardsPlayed[positionOfCardsPlayedArray[0]],
+          });
           return;
         }
-        // Otherwise when wild card 10 is played, we do not switch players
-        const currPlayer = await currUserGameRound[0].getUser();
-        res.send({ currGame, currPlayer, message: 'update completed with a wild card played' });
-        return;
       }
-
-      // If player couldn't play a card - switch turns
-      if (positionOfCardsPlayedArray.length === 0) {
-        const result = await switchPlayerTurn(currGame, db);
-        res.send(result);
-        return;
-      }
+      // Otherwise we switch players (including when player couldn't play a card)
+      const result = await switchPlayerTurn(currGame, db, typeOfCardsPlayed[positionOfCardsPlayedArray[0]]);
+      res.send(result);
+      return;
     } catch (error) {
       console.log(error);
     }

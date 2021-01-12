@@ -179,6 +179,7 @@ const displayTableTopAndBtns = () => {
           axios.put(`games/${currentGame.id}/players/${loggedInUserId}/play`,
             { selectedCardsPlayedPositionArray, cardType })
             .then((playCardsResponse) => {
+              console.log(playCardsResponse, 'playCardsResponse');
               currentGame = playCardsResponse.data.currGame;
               refreshGameInfo();
               playBtn.disabled = true;
