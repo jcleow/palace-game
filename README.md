@@ -1,7 +1,7 @@
 <!-- @format -->
 
 # palace-game
-Deployed on: https://palace-card-game.herokuapp.com/
+Deployed on: https://palace-card-game.herokuapp.com/  
 Portfolio: https://jcleow.github.io/portfolio/palace.html
 
 Palace is a fun card game for 2 players. Players must play cards in a discard pile using ascending order, and the first player to run out of cards wins.
